@@ -1,0 +1,407 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  type      String
+  timezone  String
+  locale    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users                 User[]
+  roles                 Role[]
+  permissions           Permission[]
+  vehicles              Vehicle[]
+  vehicleProfiles       VehicleProfile[]
+  workOrders            WorkOrder[]
+  workOrderTasks        WorkOrderTask[]
+  pmPrograms            PMProgram[]
+  pmTasks               PMTask[]
+  breakdownEvents       BreakdownEvent[]
+  inventoryItems        InventoryItem[]
+  inventoryTransactions InventoryTransaction[]
+  shops                 Shop[]
+  schedulerEvents       SchedulerEvent[]
+  tripReadinessRecords  TripReadinessRecord[]
+  fleetHealthSnapshots  FleetHealthSnapshot[]
+  notifications         Notification[]
+  telemetryRecords      TelemetryRecord[]
+  configPacks           ConfigPack[]
+  auditLogs             AuditLog[]
+
+  @@index([tenantId])
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  tenantId    String
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  users       User[]
+  permissions Permission[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  tenantId  String
+  key       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  roles     Role[]
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model User {
+  id                    String           @id @default(uuid())
+  tenantId              String
+  email                 String
+  displayName           String
+  roleId                String
+  isActive              Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  tenant                Tenant           @relation(fields: [tenantId], references: [id])
+  role                  Role             @relation(fields: [roleId], references: [id])
+  requestedWorkOrders   WorkOrder[]      @relation("WorkOrderRequestedBy")
+  assignedWorkOrders    WorkOrder[]      @relation("WorkOrderAssignedTo")
+  schedulerEvents       SchedulerEvent[] @relation("SchedulerEventAssignedTo")
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([roleId])
+}
+
+model Vehicle {
+  id               String                @id @default(uuid())
+  tenantId         String
+  shopId           String?
+  name             String
+  assetTag         String
+  category         String
+  location         String?
+  status           String
+  criticality      String
+  manufacturer     String?
+  model            String?
+  year             Int?
+  vinOrSerial      String?
+  meterReading     Float?                @default(0)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  tenant           Tenant                @relation(fields: [tenantId], references: [id])
+  shop             Shop?                 @relation(fields: [shopId], references: [id])
+  profile          VehicleProfile?
+  workOrders       WorkOrder[]
+  pmPrograms       PMProgram[]
+  breakdownEvents  BreakdownEvent[]
+  schedulerEvents  SchedulerEvent[]
+  tripReadinessRecords TripReadinessRecord[]
+  telemetryRecords TelemetryRecord[]
+
+  @@unique([tenantId, assetTag])
+  @@index([tenantId])
+  @@index([shopId])
+}
+
+model VehicleProfile {
+  id        String   @id @default(uuid())
+  tenantId  String
+  vehicleId String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@index([tenantId])
+}
+
+model WorkOrder {
+  id                 String              @id @default(uuid())
+  tenantId           String
+  vehicleId          String
+  type               String
+  status             String
+  priority           String
+  severity           String
+  requestedByUserId  String
+  assignedToUserId   String?
+  summary            String
+  description        String?
+  dueDate            DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  tenant             Tenant              @relation(fields: [tenantId], references: [id])
+  vehicle            Vehicle             @relation(fields: [vehicleId], references: [id])
+  requestedByUser    User                @relation("WorkOrderRequestedBy", fields: [requestedByUserId], references: [id])
+  assignedToUser     User?               @relation("WorkOrderAssignedTo", fields: [assignedToUserId], references: [id])
+  tasks              WorkOrderTask[]
+  breakdownEvents    BreakdownEvent[]
+  inventoryTransactions InventoryTransaction[]
+  schedulerEvents    SchedulerEvent[]
+
+  @@index([tenantId])
+  @@index([vehicleId])
+  @@index([requestedByUserId])
+  @@index([assignedToUserId])
+}
+
+model WorkOrderTask {
+  id          String    @id @default(uuid())
+  tenantId    String
+  workOrderId String
+  name        String
+  status      String
+  sequence    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id])
+
+  @@index([tenantId])
+  @@index([workOrderId])
+}
+
+model PMProgram {
+  id                String    @id @default(uuid())
+  tenantId          String
+  vehicleId         String
+  name              String
+  triggerType       String
+  intervalDays      Int?
+  intervalMeter     Float?
+  lastCompletedAt   DateTime?
+  lastMeterReading  Float?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+  vehicle           Vehicle   @relation(fields: [vehicleId], references: [id])
+  tasks             PMTask[]
+
+  @@index([tenantId])
+  @@index([vehicleId])
+}
+
+model PMTask {
+  id          String    @id @default(uuid())
+  tenantId    String
+  pmProgramId String
+  name        String
+  sequence    Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  pmProgram   PMProgram @relation(fields: [pmProgramId], references: [id])
+
+  @@index([tenantId])
+  @@index([pmProgramId])
+}
+
+model BreakdownEvent {
+  id          String     @id @default(uuid())
+  tenantId    String
+  vehicleId   String
+  workOrderId String?
+  description String
+  occurredAt  DateTime
+  status      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  vehicle     Vehicle    @relation(fields: [vehicleId], references: [id])
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id])
+
+  @@index([tenantId])
+  @@index([vehicleId])
+  @@index([workOrderId])
+}
+
+model InventoryItem {
+  id              String                 @id @default(uuid())
+  tenantId        String
+  sku             String
+  name            String
+  description     String?
+  unitOfMeasure   String
+  minStockLevel   Int                    @default(0)
+  reorderPoint    Int                    @default(0)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  tenant          Tenant                 @relation(fields: [tenantId], references: [id])
+  transactions    InventoryTransaction[]
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+}
+
+model InventoryTransaction {
+  id              String        @id @default(uuid())
+  tenantId        String
+  inventoryItemId String
+  workOrderId     String?
+  shopId          String?
+  type            String
+  quantity        Float
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  workOrder       WorkOrder?    @relation(fields: [workOrderId], references: [id])
+  shop            Shop?         @relation(fields: [shopId], references: [id])
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([workOrderId])
+  @@index([shopId])
+}
+
+model Shop {
+  id                    String                 @id @default(uuid())
+  tenantId              String
+  name                  String
+  location              String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id])
+  vehicles              Vehicle[]
+  inventoryTransactions InventoryTransaction[]
+  schedulerEvents       SchedulerEvent[]
+
+  @@index([tenantId])
+}
+
+model SchedulerEvent {
+  id               String     @id @default(uuid())
+  tenantId         String
+  vehicleId        String?
+  shopId           String?
+  workOrderId      String?
+  assignedToUserId String?
+  title            String
+  startsAt         DateTime
+  endsAt           DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  tenant           Tenant     @relation(fields: [tenantId], references: [id])
+  vehicle          Vehicle?   @relation(fields: [vehicleId], references: [id])
+  shop             Shop?      @relation(fields: [shopId], references: [id])
+  workOrder        WorkOrder? @relation(fields: [workOrderId], references: [id])
+  assignedToUser   User?      @relation("SchedulerEventAssignedTo", fields: [assignedToUserId], references: [id])
+
+  @@index([tenantId])
+  @@index([vehicleId])
+  @@index([shopId])
+  @@index([workOrderId])
+  @@index([assignedToUserId])
+}
+
+model TripReadinessRecord {
+  id                 String   @id @default(uuid())
+  tenantId           String
+  vehicleId          String
+  scheduledDeparture DateTime
+  status             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenantId], references: [id])
+  vehicle            Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@index([tenantId])
+  @@index([vehicleId])
+}
+
+model FleetHealthSnapshot {
+  id           String   @id @default(uuid())
+  tenantId     String
+  score        Int
+  calculatedAt DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  tenantId  String
+  userId    String
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model TelemetryRecord {
+  id         String   @id @default(uuid())
+  tenantId   String
+  vehicleId  String
+  source     String
+  recordedAt DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@index([tenantId])
+  @@index([vehicleId])
+}
+
+model ConfigPack {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+}
