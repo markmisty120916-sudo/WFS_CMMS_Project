@@ -1,0 +1,13 @@
+/**
+ * AIMI Intelligence Logic — Anomaly Detection Logic
+ * WFS Universal CMMS
+ * Empty logic stub. No business logic.
+ */
+
+export enum ANOMALY_DETECTION_LOGIC_REPOSITORY {}
+
+export interface AnomalyDetectionLogicRepositoryPlaceholder {
+  placeholder?: unknown;
+}
+
+export class AnomalyDetectionLogicRepository {}
