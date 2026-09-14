@@ -1,0 +1,11 @@
+/**
+ * AIMI Engine — Aimi Activation Integration Context
+ * WFS Universal CMMS
+ * Scaffold only. No business logic.
+ */
+
+export interface AimiActivationIntegrationContextPipelinePlaceholder {
+  placeholder?: unknown;
+}
+
+export class AimiActivationIntegrationContextPipeline {}
