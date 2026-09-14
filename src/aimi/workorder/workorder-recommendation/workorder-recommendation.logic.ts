@@ -64,6 +64,7 @@ export type WorkorderHandlingRecommendationResult = {
     | 'pre-stage critical parts'
     | 'verify parts availability'
     | 'standard parts flow';
+  preemptivePartsCheck: boolean;
 };
 
 export function recommendWorkorderHandling(
@@ -99,9 +100,15 @@ export function recommendWorkorderHandling(
     partsReadinessRecommendation = 'pre-stage critical parts';
   }
 
+  let preemptivePartsCheck = false;
+  if (input.riskLevel === 'high') {
+    preemptivePartsCheck = true;
+  }
+
   return {
     workorderId: asLabel(input.workorderId),
     technicianSkillRecommendation,
     partsReadinessRecommendation,
+    preemptivePartsCheck,
   };
 }

@@ -23,6 +23,7 @@ export type FleetHealthAlertRoutingResult = {
   predictedFailureWindow: number | null;
   projectedSeverity: FleetHealthProjectedSeverity;
   trend: 'worsening' | 'improving' | 'stable' | 'unknown';
+  escalationRecommended: boolean;
 };
 
 function asLabel(value: string | undefined): string {
@@ -88,6 +89,13 @@ export function routeFleethealthAlert(
     trend = input.trend;
   }
 
+  let escalationRecommended = false;
+  if (projectedSeverity === 'high') {
+    if (trend === 'worsening') {
+      escalationRecommended = true;
+    }
+  }
+
   return {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
@@ -95,5 +103,6 @@ export function routeFleethealthAlert(
     predictedFailureWindow,
     projectedSeverity,
     trend,
+    escalationRecommended,
   };
 }

@@ -24,10 +24,13 @@ export type ReportingAlertingInput = {
 
 export type ReportingAlertCategory = 'risk_severity' | 'risk_schedule' | 'none';
 
+export type ReportingAutoFlagCategory = 'severity' | 'schedule' | 'none';
+
 export type ReportingAlertingResult = {
   reportId: string;
   alertFlag: boolean;
   alertCategory: ReportingAlertCategory;
+  autoFlagCategory: ReportingAutoFlagCategory;
 };
 
 function asCount(value: number | undefined): number {
@@ -65,9 +68,19 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     }
   }
 
+  let autoFlagCategory: ReportingAutoFlagCategory = 'none';
+  if (input.predictionSummary !== undefined) {
+    if (asCount(input.predictionSummary.highSeverity) > 0) {
+      autoFlagCategory = 'severity';
+    } else if (asCount(input.predictionSummary.delays) > 0) {
+      autoFlagCategory = 'schedule';
+    }
+  }
+
   return {
     reportId: asLabel(input.reportId),
     alertFlag,
     alertCategory,
+    autoFlagCategory,
   };
 }

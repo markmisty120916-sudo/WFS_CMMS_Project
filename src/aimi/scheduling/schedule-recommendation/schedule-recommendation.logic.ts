@@ -63,6 +63,7 @@ export type ScheduleOptionsRecommendationResult = {
   scheduleId: string;
   slotRecommendation: ScheduleSlotRecommendation;
   capacityRecommendation: ScheduleCapacityRecommendation;
+  bufferRecommended: boolean;
 };
 
 export function recommendScheduleOptions(
@@ -91,9 +92,19 @@ export function recommendScheduleOptions(
     capacityRecommendation = 'avoid_overbooking';
   }
 
+  let bufferRecommended = false;
+  if (input.predictedDelayMinutes !== undefined) {
+    if (input.predictedDelayMinutes !== null) {
+      if (input.predictedDelayMinutes > 45) {
+        bufferRecommended = true;
+      }
+    }
+  }
+
   return {
     scheduleId: asLabel(input.scheduleId),
     slotRecommendation,
     capacityRecommendation,
+    bufferRecommended,
   };
 }
