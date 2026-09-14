@@ -119,12 +119,14 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     alertCategory,
   };
 
+  output.alertFlag ??= false;
   output.autoFlagCategory ??= 'none';
   output.alertFusion = {
     severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
     durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
     combinedAlert: output.alertFusion?.combinedAlert ?? false,
   };
+  output.alertCategory ??= 'none';
 
   return output;
 }

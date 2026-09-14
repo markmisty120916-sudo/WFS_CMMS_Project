@@ -69,6 +69,7 @@ export type ScheduleOptionsRecommendationResult = {
   scheduleId: string;
   bufferRecommended: boolean;
   scheduleFusion: ScheduleFusion;
+  autoFlagCategory: 'none';
   slotRecommendation: ScheduleSlotRecommendation;
   capacityRecommendation: ScheduleCapacityRecommendation;
 };
@@ -146,11 +147,13 @@ export function recommendScheduleOptions(
       feasibleButRisky,
       combinedRecommendation,
     },
+    autoFlagCategory: 'none',
     slotRecommendation,
     capacityRecommendation,
   };
 
   output.bufferRecommended ??= false;
+  output.autoFlagCategory ??= 'none';
   output.scheduleFusion = {
     delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
     feasibleButRisky: output.scheduleFusion?.feasibleButRisky ?? false,

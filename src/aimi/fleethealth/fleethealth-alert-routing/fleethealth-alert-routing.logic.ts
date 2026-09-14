@@ -30,6 +30,7 @@ export type FleetHealthAlertRoutingResult = {
   trend: 'worsening' | 'improving' | 'stable' | 'unknown';
   escalationRecommended: boolean;
   escalationFusion: FleetHealthEscalationFusion;
+  autoFlagCategory: 'none';
   routingTarget: FleetHealthRoutingTarget;
 };
 
@@ -137,10 +138,12 @@ export function routeFleethealthAlert(
       imminentFailure,
       combinedRecommendation,
     },
+    autoFlagCategory: 'none',
     routingTarget,
   };
 
   output.escalationRecommended ??= false;
+  output.autoFlagCategory ??= 'none';
   output.escalationFusion = {
     highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
     imminentFailure: output.escalationFusion?.imminentFailure ?? false,

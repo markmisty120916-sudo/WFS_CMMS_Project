@@ -68,6 +68,7 @@ export type WorkorderHandlingRecommendationResult = {
   workorderId: string;
   preemptivePartsCheck: boolean;
   workorderFusion: WorkorderFusion;
+  autoFlagCategory: 'none';
   technicianSkillRecommendation: 'senior' | 'intermediate' | 'junior';
   partsReadinessRecommendation:
     | 'pre-stage critical parts'
@@ -151,11 +152,13 @@ export function recommendWorkorderHandling(
       mediumRiskLongDuration,
       combinedRecommendation,
     },
+    autoFlagCategory: 'none',
     technicianSkillRecommendation,
     partsReadinessRecommendation,
   };
 
   output.preemptivePartsCheck ??= false;
+  output.autoFlagCategory ??= 'none';
   output.workorderFusion = {
     highRiskHighEffort: output.workorderFusion?.highRiskHighEffort ?? false,
     mediumRiskLongDuration: output.workorderFusion?.mediumRiskLongDuration ?? false,
