@@ -120,10 +120,10 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
   };
 
   output.autoFlagCategory ??= 'none';
-  output.alertFusion ??= {
-    severityAndDelay: false,
-    durationAndCapacity: false,
-    combinedAlert: false,
+  output.alertFusion = {
+    severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
+    durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
+    combinedAlert: output.alertFusion?.combinedAlert ?? false,
   };
 
   return output;

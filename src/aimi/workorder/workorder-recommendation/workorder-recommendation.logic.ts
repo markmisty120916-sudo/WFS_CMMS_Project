@@ -156,10 +156,10 @@ export function recommendWorkorderHandling(
   };
 
   output.preemptivePartsCheck ??= false;
-  output.workorderFusion ??= {
-    highRiskHighEffort: false,
-    mediumRiskLongDuration: false,
-    combinedRecommendation: false,
+  output.workorderFusion = {
+    highRiskHighEffort: output.workorderFusion?.highRiskHighEffort ?? false,
+    mediumRiskLongDuration: output.workorderFusion?.mediumRiskLongDuration ?? false,
+    combinedRecommendation: output.workorderFusion?.combinedRecommendation ?? false,
   };
 
   return output;

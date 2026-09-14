@@ -141,10 +141,10 @@ export function routeFleethealthAlert(
   };
 
   output.escalationRecommended ??= false;
-  output.escalationFusion ??= {
-    highSeverityAndTrend: false,
-    imminentFailure: false,
-    combinedRecommendation: false,
+  output.escalationFusion = {
+    highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
+    imminentFailure: output.escalationFusion?.imminentFailure ?? false,
+    combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
   };
 
   return output;

@@ -151,10 +151,10 @@ export function recommendScheduleOptions(
   };
 
   output.bufferRecommended ??= false;
-  output.scheduleFusion ??= {
-    delayAndLowCapacity: false,
-    feasibleButRisky: false,
-    combinedRecommendation: false,
+  output.scheduleFusion = {
+    delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
+    feasibleButRisky: output.scheduleFusion?.feasibleButRisky ?? false,
+    combinedRecommendation: output.scheduleFusion?.combinedRecommendation ?? false,
   };
 
   return output;
