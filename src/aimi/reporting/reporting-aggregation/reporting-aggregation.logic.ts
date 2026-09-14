@@ -20,6 +20,19 @@ export type ReportingAggregationInput = {
   predictedDelayMinutes?: number | null;
   projectedCapacity?: ReportingProjectedCapacity;
   highProjectedCapacityCount?: number;
+  projectedSeverity?: 'low' | 'medium' | 'high' | 'unknown';
+  highProjectedSeverityCount?: number;
+  longDurationCount?: number;
+  delayCount?: number;
+  capacityLowCount?: number;
+};
+
+export type ReportingPredictionSummary = {
+  failureWindows: number;
+  highSeverity: number;
+  longDurations: number;
+  delays: number;
+  capacityLow: number;
 };
 
 export type ReportingAggregationResult = {
@@ -34,6 +47,7 @@ export type ReportingAggregationResult = {
   averagePredictedDurationMinutes: number;
   predictedDelayMinutes: number;
   highProjectedCapacityCount: number;
+  predictionSummary: ReportingPredictionSummary;
 };
 
 function asCount(value: number | undefined): number {
@@ -101,6 +115,44 @@ export function aggregateReportingData(input: ReportingAggregationInput): Report
     }
   }
 
+  let failureWindows = predictedFailureWindowPresentCount;
+
+  let highSeverity = asCount(input.highProjectedSeverityCount);
+  if (input.highProjectedSeverityCount === undefined) {
+    if (input.projectedSeverity === 'high') {
+      highSeverity = 1;
+    }
+  }
+
+  let longDurations = asCount(input.longDurationCount);
+  if (input.longDurationCount === undefined) {
+    if (input.predictedDurationMinutes !== undefined) {
+      if (input.predictedDurationMinutes !== null) {
+        if (input.predictedDurationMinutes > 240) {
+          longDurations = 1;
+        }
+      }
+    }
+  }
+
+  let delays = asCount(input.delayCount);
+  if (input.delayCount === undefined) {
+    if (input.predictedDelayMinutes !== undefined) {
+      if (input.predictedDelayMinutes !== null) {
+        if (input.predictedDelayMinutes > 0) {
+          delays = 1;
+        }
+      }
+    }
+  }
+
+  let capacityLow = asCount(input.capacityLowCount);
+  if (input.capacityLowCount === undefined) {
+    if (input.projectedCapacity === 'low') {
+      capacityLow = 1;
+    }
+  }
+
   return {
     reportId: asLabel(input.reportId),
     highSeverityCount,
@@ -113,5 +165,12 @@ export function aggregateReportingData(input: ReportingAggregationInput): Report
     averagePredictedDurationMinutes,
     predictedDelayMinutes,
     highProjectedCapacityCount,
+    predictionSummary: {
+      failureWindows,
+      highSeverity,
+      longDurations,
+      delays,
+      capacityLow,
+    },
   };
 }

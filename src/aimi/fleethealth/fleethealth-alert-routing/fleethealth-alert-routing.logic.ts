@@ -19,6 +19,8 @@ export type FleetHealthAlertRoutingResult = {
   recordId: string;
   severity: string;
   routingTarget: FleetHealthRoutingTarget;
+  predictedFailureWindow: number | null;
+  projectedSeverity: FleetHealthProjectedSeverity;
 };
 
 function asLabel(value: string | undefined): string {
@@ -60,9 +62,21 @@ export function routeFleethealthAlert(
     }
   }
 
+  let predictedFailureWindow: number | null = null;
+  if (input.predictedFailureWindow !== undefined) {
+    predictedFailureWindow = input.predictedFailureWindow;
+  }
+
+  let projectedSeverity: FleetHealthProjectedSeverity = 'unknown';
+  if (input.projectedSeverity !== undefined) {
+    projectedSeverity = input.projectedSeverity;
+  }
+
   return {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
     routingTarget,
+    predictedFailureWindow,
+    projectedSeverity,
   };
 }

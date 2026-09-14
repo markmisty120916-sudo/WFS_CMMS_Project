@@ -57,3 +57,43 @@ export function projectWorkorderRisk(input: WorkorderRiskProjectionInput): Worko
     riskLevel,
   };
 }
+
+export type WorkorderAggregationInput = {
+  workorderId?: string;
+  predictedDurationMinutes?: number | null;
+  predictedEffortScore?: number | null;
+  riskLevel?: WorkorderRiskLevel;
+};
+
+export type WorkorderAggregationResult = {
+  workorderId: string;
+  predictedDurationMinutes: number | null;
+  predictedEffortScore: number | null;
+  riskLevel: WorkorderRiskLevel;
+};
+
+export function aggregateWorkorderData(input: WorkorderAggregationInput): WorkorderAggregationResult {
+  // TODO: add future aggregation metrics (shop totals, SLA mix, forecast coverage).
+
+  let predictedDurationMinutes: number | null = null;
+  if (input.predictedDurationMinutes !== undefined) {
+    predictedDurationMinutes = input.predictedDurationMinutes;
+  }
+
+  let predictedEffortScore: number | null = null;
+  if (input.predictedEffortScore !== undefined) {
+    predictedEffortScore = input.predictedEffortScore;
+  }
+
+  let riskLevel: WorkorderRiskLevel = 'unknown';
+  if (input.riskLevel !== undefined) {
+    riskLevel = input.riskLevel;
+  }
+
+  return {
+    workorderId: asLabel(input.workorderId),
+    predictedDurationMinutes,
+    predictedEffortScore,
+    riskLevel,
+  };
+}

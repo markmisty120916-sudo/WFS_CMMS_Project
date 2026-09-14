@@ -4,6 +4,14 @@
  * Phase 6 visibility plus prediction aggregates. Flags only.
  */
 
+export type ReportingPredictionSummary = {
+  highSeverity?: number;
+  delays?: number;
+  failureWindows?: number;
+  longDurations?: number;
+  capacityLow?: number;
+};
+
 export type ReportingAlertingInput = {
   reportId?: string;
   highSeverityCount?: number;
@@ -11,6 +19,7 @@ export type ReportingAlertingInput = {
   highRiskWorkorderCount?: number;
   highProjectedSeverityCount?: number;
   slotsWithPredictedDelayCount?: number;
+  predictionSummary?: ReportingPredictionSummary;
 };
 
 export type ReportingAlertingResult = {
@@ -50,6 +59,14 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
   }
   if (asCount(input.slotsWithPredictedDelayCount) > PREDICTED_DELAY_SLOT_THRESHOLD) {
     alertFlag = true;
+  }
+  if (input.predictionSummary !== undefined) {
+    if (asCount(input.predictionSummary.highSeverity) > 0) {
+      alertFlag = true;
+    }
+    if (asCount(input.predictionSummary.delays) > PREDICTED_DELAY_SLOT_THRESHOLD) {
+      alertFlag = true;
+    }
   }
 
   return {

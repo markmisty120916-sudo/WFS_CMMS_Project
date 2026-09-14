@@ -74,3 +74,45 @@ export function projectScheduleDelay(input: ScheduleDelayProjectionInput): Sched
     predictedDelayMinutes,
   };
 }
+
+export type ScheduleProjectedCapacity = 'high' | 'medium' | 'low' | 'unknown';
+
+export type ScheduleAggregationInput = {
+  scheduleId?: string;
+  slotFeasible?: boolean;
+  projectedCapacity?: ScheduleProjectedCapacity;
+  predictedDelayMinutes?: number | null;
+};
+
+export type ScheduleAggregationResult = {
+  scheduleId: string;
+  slotFeasible: boolean;
+  projectedCapacity: ScheduleProjectedCapacity;
+  predictedDelayMinutes: number | null;
+};
+
+export function aggregateScheduleData(input: ScheduleAggregationInput): ScheduleAggregationResult {
+  // TODO: add future schedule analytics (bay utilization, delay histograms).
+
+  let slotFeasible = false;
+  if (input.slotFeasible !== undefined) {
+    slotFeasible = input.slotFeasible;
+  }
+
+  let projectedCapacity: ScheduleProjectedCapacity = 'unknown';
+  if (input.projectedCapacity !== undefined) {
+    projectedCapacity = input.projectedCapacity;
+  }
+
+  let predictedDelayMinutes: number | null = null;
+  if (input.predictedDelayMinutes !== undefined) {
+    predictedDelayMinutes = input.predictedDelayMinutes;
+  }
+
+  return {
+    scheduleId: asLabel(input.scheduleId),
+    slotFeasible,
+    projectedCapacity,
+    predictedDelayMinutes,
+  };
+}
