@@ -1,14 +1,18 @@
 /**
  * AIMI Engine — Fleethealth Alert Routing
  * WFS Universal CMMS
- * Phase 6 visibility. Maps existing severity only.
+ * Phase 6 visibility plus prediction-aware routing. Maps existing values only.
  */
 
 export type FleetHealthRoutingTarget = 'dashboard' | 'email' | 'sms' | 'none';
 
+export type FleetHealthProjectedSeverity = 'low' | 'medium' | 'high' | 'unknown';
+
 export type FleetHealthAlertRoutingInput = {
   recordId?: string;
   severity?: string;
+  predictedFailureWindow?: number | null;
+  projectedSeverity?: FleetHealthProjectedSeverity;
 };
 
 export type FleetHealthAlertRoutingResult = {
@@ -27,7 +31,7 @@ function asLabel(value: string | undefined): string {
 export function routeFleethealthAlert(
   input: FleetHealthAlertRoutingInput,
 ): FleetHealthAlertRoutingResult {
-  // TODO: apply future routing rules (on-call roster, quiet hours, tenant channels).
+  // TODO: refine routing with prediction (failure-window tightness, projected severity).
 
   let routingTarget: FleetHealthRoutingTarget = 'dashboard';
 
@@ -45,6 +49,15 @@ export function routeFleethealthAlert(
   }
   if (input.severity === undefined || input.severity === '') {
     routingTarget = 'dashboard';
+  }
+
+  if (input.projectedSeverity === 'high') {
+    if (routingTarget === 'dashboard') {
+      routingTarget = 'email';
+    }
+    if (routingTarget === 'none') {
+      routingTarget = 'email';
+    }
   }
 
   return {

@@ -1,8 +1,10 @@
 /**
  * AIMI Engine — Reporting Aggregation
  * WFS Universal CMMS
- * Phase 6 visibility. Roll-up of existing counts only.
+ * Phase 6 visibility plus prediction roll-ups. Existing metrics only.
  */
+
+export type ReportingProjectedCapacity = 'high' | 'medium' | 'low' | 'unknown';
 
 export type ReportingAggregationInput = {
   reportId?: string;
@@ -10,6 +12,14 @@ export type ReportingAggregationInput = {
   mediumSeverityCount?: number;
   lowSeverityCount?: number;
   unknownSeverityCount?: number;
+  predictedFailureWindow?: number | null;
+  predictedFailureWindowPresentCount?: number;
+  predictedDurationMinutes?: number | null;
+  predictedDurationMinutesSum?: number;
+  predictedDurationMinutesCount?: number;
+  predictedDelayMinutes?: number | null;
+  projectedCapacity?: ReportingProjectedCapacity;
+  highProjectedCapacityCount?: number;
 };
 
 export type ReportingAggregationResult = {
@@ -20,6 +30,10 @@ export type ReportingAggregationResult = {
   unknownSeverityCount: number;
   totalCount: number;
   highSeverityPercent: number;
+  predictedFailureWindowPresentCount: number;
+  averagePredictedDurationMinutes: number;
+  predictedDelayMinutes: number;
+  highProjectedCapacityCount: number;
 };
 
 function asCount(value: number | undefined): number {
@@ -37,7 +51,7 @@ function asLabel(value: string | undefined): string {
 }
 
 export function aggregateReportingData(input: ReportingAggregationInput): ReportingAggregationResult {
-  // TODO: apply future aggregation rules (by shop, fleet, time window).
+  // TODO: add richer prediction-based reporting metrics (by shop, fleet, time window).
 
   const highSeverityCount = asCount(input.highSeverityCount);
   const mediumSeverityCount = asCount(input.mediumSeverityCount);
@@ -51,6 +65,42 @@ export function aggregateReportingData(input: ReportingAggregationInput): Report
     highSeverityPercent = (highSeverityCount * 100) / totalCount;
   }
 
+  let predictedFailureWindowPresentCount = asCount(input.predictedFailureWindowPresentCount);
+  if (input.predictedFailureWindowPresentCount === undefined) {
+    if (input.predictedFailureWindow !== undefined) {
+      if (input.predictedFailureWindow !== null) {
+        predictedFailureWindowPresentCount = 1;
+      }
+    }
+  }
+
+  let durationSum = asCount(input.predictedDurationMinutesSum);
+  let durationCount = asCount(input.predictedDurationMinutesCount);
+  if (input.predictedDurationMinutesSum === undefined) {
+    if (input.predictedDurationMinutes !== undefined) {
+      if (input.predictedDurationMinutes !== null) {
+        durationSum = input.predictedDurationMinutes;
+        durationCount = 1;
+      }
+    }
+  }
+
+  let averagePredictedDurationMinutes = 0;
+  if (durationCount > 0) {
+    averagePredictedDurationMinutes = durationSum / durationCount;
+  }
+
+  let predictedDelayMinutes = asCount(
+    input.predictedDelayMinutes === null ? undefined : input.predictedDelayMinutes,
+  );
+
+  let highProjectedCapacityCount = asCount(input.highProjectedCapacityCount);
+  if (input.highProjectedCapacityCount === undefined) {
+    if (input.projectedCapacity === 'high') {
+      highProjectedCapacityCount = 1;
+    }
+  }
+
   return {
     reportId: asLabel(input.reportId),
     highSeverityCount,
@@ -59,5 +109,9 @@ export function aggregateReportingData(input: ReportingAggregationInput): Report
     unknownSeverityCount,
     totalCount,
     highSeverityPercent,
+    predictedFailureWindowPresentCount,
+    averagePredictedDurationMinutes,
+    predictedDelayMinutes,
+    highProjectedCapacityCount,
   };
 }
