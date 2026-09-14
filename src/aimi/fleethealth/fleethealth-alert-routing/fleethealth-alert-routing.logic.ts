@@ -64,6 +64,14 @@ export function routeFleethealthAlert(
       routingTarget = 'email';
     }
   }
+  if (input.trend === 'worsening') {
+    if (routingTarget === 'dashboard') {
+      routingTarget = 'email';
+    }
+    if (routingTarget === 'none') {
+      routingTarget = 'email';
+    }
+  }
 
   let predictedFailureWindow: number | null = null;
   if (input.predictedFailureWindow !== undefined) {

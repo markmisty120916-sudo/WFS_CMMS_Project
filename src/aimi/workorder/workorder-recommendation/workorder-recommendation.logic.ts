@@ -48,3 +48,60 @@ export function estimateWorkorderEffort(
     predictedEffortScore,
   };
 }
+
+export type WorkorderRiskLevel = 'low' | 'medium' | 'high' | 'unknown';
+
+export type WorkorderHandlingRecommendationInput = {
+  workorderId?: string;
+  predictedEffortScore?: number | null;
+  riskLevel?: WorkorderRiskLevel;
+};
+
+export type WorkorderHandlingRecommendationResult = {
+  workorderId: string;
+  technicianSkillRecommendation: 'senior' | 'intermediate' | 'junior';
+  partsReadinessRecommendation:
+    | 'pre-stage critical parts'
+    | 'verify parts availability'
+    | 'standard parts flow';
+};
+
+export function recommendWorkorderHandling(
+  input: WorkorderHandlingRecommendationInput,
+): WorkorderHandlingRecommendationResult {
+  // TODO: refine handling recommendations (certifications, OEM procedures). Do not create workorders.
+
+  let technicianSkillRecommendation: 'senior' | 'intermediate' | 'junior' = 'junior';
+  let partsReadinessRecommendation:
+    | 'pre-stage critical parts'
+    | 'verify parts availability'
+    | 'standard parts flow' = 'standard parts flow';
+
+  if (input.predictedEffortScore !== undefined) {
+    if (input.predictedEffortScore !== null) {
+      if (input.predictedEffortScore >= 3) {
+        technicianSkillRecommendation = 'intermediate';
+      }
+      if (input.predictedEffortScore >= 5) {
+        technicianSkillRecommendation = 'senior';
+      }
+    }
+  }
+
+  if (input.riskLevel === 'medium') {
+    if (technicianSkillRecommendation === 'junior') {
+      technicianSkillRecommendation = 'intermediate';
+    }
+    partsReadinessRecommendation = 'verify parts availability';
+  }
+  if (input.riskLevel === 'high') {
+    technicianSkillRecommendation = 'senior';
+    partsReadinessRecommendation = 'pre-stage critical parts';
+  }
+
+  return {
+    workorderId: asLabel(input.workorderId),
+    technicianSkillRecommendation,
+    partsReadinessRecommendation,
+  };
+}

@@ -48,3 +48,52 @@ export function projectScheduleCapacity(
     projectedCapacity,
   };
 }
+
+export type ScheduleSlotRecommendation = 'reject_slot' | 'use_with_buffer' | 'use_as_is';
+export type ScheduleCapacityRecommendation = 'avoid_overbooking' | 'monitor_load' | 'normal_scheduling';
+
+export type ScheduleOptionsRecommendationInput = {
+  scheduleId?: string;
+  slotFeasible?: boolean;
+  projectedCapacity?: 'high' | 'medium' | 'low' | 'unknown';
+  predictedDelayMinutes?: number | null;
+};
+
+export type ScheduleOptionsRecommendationResult = {
+  scheduleId: string;
+  slotRecommendation: ScheduleSlotRecommendation;
+  capacityRecommendation: ScheduleCapacityRecommendation;
+};
+
+export function recommendScheduleOptions(
+  input: ScheduleOptionsRecommendationInput,
+): ScheduleOptionsRecommendationResult {
+  // TODO: refine schedule options (travel, bay type). Do not write a schedule.
+
+  let slotRecommendation: ScheduleSlotRecommendation = 'use_as_is';
+  let capacityRecommendation: ScheduleCapacityRecommendation = 'normal_scheduling';
+
+  if (input.predictedDelayMinutes !== undefined) {
+    if (input.predictedDelayMinutes !== null) {
+      if (input.predictedDelayMinutes > 30) {
+        slotRecommendation = 'use_with_buffer';
+      }
+    }
+  }
+  if (input.slotFeasible === false) {
+    slotRecommendation = 'reject_slot';
+  }
+
+  if (input.projectedCapacity === 'medium') {
+    capacityRecommendation = 'monitor_load';
+  }
+  if (input.projectedCapacity === 'low') {
+    capacityRecommendation = 'avoid_overbooking';
+  }
+
+  return {
+    scheduleId: asLabel(input.scheduleId),
+    slotRecommendation,
+    capacityRecommendation,
+  };
+}
