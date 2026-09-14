@@ -142,13 +142,19 @@ export function routeFleethealthAlert(
     routingTarget,
   };
 
-  output.escalationRecommended ??= false;
-  output.autoFlagCategory ??= 'none';
-  output.escalationFusion = {
-    highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
-    imminentFailure: output.escalationFusion?.imminentFailure ?? false,
-    combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
+  return {
+    recordId: output.recordId,
+    severity: output.severity,
+    predictedFailureWindow: output.predictedFailureWindow,
+    projectedSeverity: output.projectedSeverity,
+    trend: output.trend,
+    escalationRecommended: output.escalationRecommended ?? false,
+    escalationFusion: {
+      highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
+      imminentFailure: output.escalationFusion?.imminentFailure ?? false,
+      combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
+    },
+    autoFlagCategory: output.autoFlagCategory ?? 'none',
+    routingTarget: output.routingTarget,
   };
-
-  return output;
 }

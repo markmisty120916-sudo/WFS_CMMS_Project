@@ -152,13 +152,16 @@ export function recommendScheduleOptions(
     capacityRecommendation,
   };
 
-  output.bufferRecommended ??= false;
-  output.autoFlagCategory ??= 'none';
-  output.scheduleFusion = {
-    delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
-    feasibleButRisky: output.scheduleFusion?.feasibleButRisky ?? false,
-    combinedRecommendation: output.scheduleFusion?.combinedRecommendation ?? false,
+  return {
+    scheduleId: output.scheduleId,
+    bufferRecommended: output.bufferRecommended ?? false,
+    scheduleFusion: {
+      delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
+      feasibleButRisky: output.scheduleFusion?.feasibleButRisky ?? false,
+      combinedRecommendation: output.scheduleFusion?.combinedRecommendation ?? false,
+    },
+    autoFlagCategory: output.autoFlagCategory ?? 'none',
+    slotRecommendation: output.slotRecommendation,
+    capacityRecommendation: output.capacityRecommendation,
   };
-
-  return output;
 }

@@ -119,14 +119,15 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     alertCategory,
   };
 
-  output.alertFlag ??= false;
-  output.autoFlagCategory ??= 'none';
-  output.alertFusion = {
-    severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
-    durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
-    combinedAlert: output.alertFusion?.combinedAlert ?? false,
+  return {
+    reportId: output.reportId,
+    alertFlag: output.alertFlag,
+    autoFlagCategory: output.autoFlagCategory ?? 'none',
+    alertFusion: {
+      severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
+      durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
+      combinedAlert: output.alertFusion?.combinedAlert ?? false,
+    },
+    alertCategory: output.alertCategory,
   };
-  output.alertCategory ??= 'none';
-
-  return output;
 }
