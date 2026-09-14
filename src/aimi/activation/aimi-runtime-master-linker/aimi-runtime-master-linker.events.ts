@@ -1,0 +1,11 @@
+/**
+ * AIMI Engine — Aimi Runtime Master Linker
+ * WFS Universal CMMS
+ * Scaffold only. No business logic.
+ */
+
+export interface AimiRuntimeMasterLinkerEventsPlaceholder {
+  placeholder?: unknown;
+}
+
+export class AimiRuntimeMasterLinkerEvents {}
