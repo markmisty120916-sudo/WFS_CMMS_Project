@@ -74,6 +74,7 @@ export type WorkorderAggregationResult = {
 
 export function aggregateWorkorderData(input: WorkorderAggregationInput): WorkorderAggregationResult {
   // TODO: add future aggregation metrics (shop totals, SLA mix, forecast coverage).
+  // TODO: format these prediction fields for UI display.
 
   let predictedDurationMinutes: number | null = null;
   if (input.predictedDurationMinutes !== undefined) {

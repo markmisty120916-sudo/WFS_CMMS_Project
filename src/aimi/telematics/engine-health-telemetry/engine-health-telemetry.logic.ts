@@ -13,6 +13,7 @@ export type NormalizedTelemetry = {
     faultFlags?: boolean;
     minorFlags?: boolean;
   };
+  projectedHealth?: TelematicsProjectedHealth;
 };
 
 export type TelematicsProjectedHealth = 'good' | 'fair' | 'poor' | 'unknown';
@@ -27,6 +28,7 @@ const BATTERY_VOLTAGE_SLIGHTLY_LOW = 12.4;
 
 export function projectTelematicsHealth(input: NormalizedTelemetry): TelematicsHealthProjection {
   // TODO: apply statistical/ML health projection (temp trends, voltage sag, DTC patterns).
+  // TODO: format projectedHealth for UI display.
 
   const vehicleId = input.vehicleId;
   const telemetry = input.rawTelemetry;
@@ -35,7 +37,11 @@ export function projectTelematicsHealth(input: NormalizedTelemetry): TelematicsH
     if (telemetry.batteryVoltage === undefined) {
       if (telemetry.faultFlags === undefined) {
         if (telemetry.minorFlags === undefined) {
-          return { vehicleId, projectedHealth: 'unknown' };
+          let projectedHealth: TelematicsProjectedHealth = 'unknown';
+          if (input.projectedHealth !== undefined) {
+            projectedHealth = input.projectedHealth;
+          }
+          return { vehicleId, projectedHealth };
         }
       }
     }
@@ -58,6 +64,9 @@ export function projectTelematicsHealth(input: NormalizedTelemetry): TelematicsH
   }
   if (telemetry.faultFlags === true) {
     projectedHealth = 'poor';
+  }
+  if (input.projectedHealth !== undefined) {
+    projectedHealth = input.projectedHealth;
   }
 
   return {

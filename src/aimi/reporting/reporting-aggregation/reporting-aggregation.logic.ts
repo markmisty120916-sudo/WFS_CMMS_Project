@@ -66,6 +66,7 @@ function asLabel(value: string | undefined): string {
 
 export function aggregateReportingData(input: ReportingAggregationInput): ReportingAggregationResult {
   // TODO: add richer prediction-based reporting metrics (by shop, fleet, time window).
+  // TODO: format predictionSummary for UI display.
 
   const highSeverityCount = asCount(input.highSeverityCount);
   const mediumSeverityCount = asCount(input.mediumSeverityCount);

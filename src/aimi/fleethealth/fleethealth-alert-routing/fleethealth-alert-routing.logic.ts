@@ -13,6 +13,7 @@ export type FleetHealthAlertRoutingInput = {
   severity?: string;
   predictedFailureWindow?: number | null;
   projectedSeverity?: FleetHealthProjectedSeverity;
+  trend?: 'worsening' | 'improving' | 'stable' | 'unknown';
 };
 
 export type FleetHealthAlertRoutingResult = {
@@ -21,6 +22,7 @@ export type FleetHealthAlertRoutingResult = {
   routingTarget: FleetHealthRoutingTarget;
   predictedFailureWindow: number | null;
   projectedSeverity: FleetHealthProjectedSeverity;
+  trend: 'worsening' | 'improving' | 'stable' | 'unknown';
 };
 
 function asLabel(value: string | undefined): string {
@@ -34,6 +36,7 @@ export function routeFleethealthAlert(
   input: FleetHealthAlertRoutingInput,
 ): FleetHealthAlertRoutingResult {
   // TODO: refine routing with prediction (failure-window tightness, projected severity).
+  // TODO: format prediction visibility fields for UI display.
 
   let routingTarget: FleetHealthRoutingTarget = 'dashboard';
 
@@ -72,11 +75,17 @@ export function routeFleethealthAlert(
     projectedSeverity = input.projectedSeverity;
   }
 
+  let trend: 'worsening' | 'improving' | 'stable' | 'unknown' = 'unknown';
+  if (input.trend !== undefined) {
+    trend = input.trend;
+  }
+
   return {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
     routingTarget,
     predictedFailureWindow,
     projectedSeverity,
+    trend,
   };
 }

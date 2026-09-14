@@ -93,6 +93,7 @@ export type ScheduleAggregationResult = {
 
 export function aggregateScheduleData(input: ScheduleAggregationInput): ScheduleAggregationResult {
   // TODO: add future schedule analytics (bay utilization, delay histograms).
+  // TODO: format these prediction fields for UI display.
 
   let slotFeasible = false;
   if (input.slotFeasible !== undefined) {
