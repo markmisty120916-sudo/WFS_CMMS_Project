@@ -143,11 +143,6 @@ export function routeFleethealthAlert(
   };
 
   return {
-    recordId: output.recordId,
-    severity: output.severity,
-    predictedFailureWindow: output.predictedFailureWindow,
-    projectedSeverity: output.projectedSeverity,
-    trend: output.trend,
     escalationRecommended: output.escalationRecommended ?? false,
     escalationFusion: {
       highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
@@ -155,6 +150,11 @@ export function routeFleethealthAlert(
       combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
     },
     autoFlagCategory: output.autoFlagCategory ?? 'none',
+    recordId: output.recordId,
+    severity: output.severity,
+    predictedFailureWindow: output.predictedFailureWindow,
+    projectedSeverity: output.projectedSeverity,
+    trend: output.trend,
     routingTarget: output.routingTarget,
   };
 }

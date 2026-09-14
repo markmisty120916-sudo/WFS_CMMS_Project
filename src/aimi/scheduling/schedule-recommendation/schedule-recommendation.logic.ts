@@ -153,7 +153,6 @@ export function recommendScheduleOptions(
   };
 
   return {
-    scheduleId: output.scheduleId,
     bufferRecommended: output.bufferRecommended ?? false,
     scheduleFusion: {
       delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
@@ -161,6 +160,7 @@ export function recommendScheduleOptions(
       combinedRecommendation: output.scheduleFusion?.combinedRecommendation ?? false,
     },
     autoFlagCategory: output.autoFlagCategory ?? 'none',
+    scheduleId: output.scheduleId,
     slotRecommendation: output.slotRecommendation,
     capacityRecommendation: output.capacityRecommendation,
   };

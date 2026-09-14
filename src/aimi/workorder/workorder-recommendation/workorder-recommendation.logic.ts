@@ -158,7 +158,6 @@ export function recommendWorkorderHandling(
   };
 
   return {
-    workorderId: output.workorderId,
     preemptivePartsCheck: output.preemptivePartsCheck ?? false,
     workorderFusion: {
       highRiskHighEffort: output.workorderFusion?.highRiskHighEffort ?? false,
@@ -166,6 +165,7 @@ export function recommendWorkorderHandling(
       combinedRecommendation: output.workorderFusion?.combinedRecommendation ?? false,
     },
     autoFlagCategory: output.autoFlagCategory ?? 'none',
+    workorderId: output.workorderId,
     technicianSkillRecommendation: output.technicianSkillRecommendation,
     partsReadinessRecommendation: output.partsReadinessRecommendation,
   };
