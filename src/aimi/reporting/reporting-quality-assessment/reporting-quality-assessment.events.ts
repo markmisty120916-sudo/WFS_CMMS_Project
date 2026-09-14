@@ -1,0 +1,11 @@
+/**
+ * AIMI Engine — Reporting Quality Assessment
+ * WFS Universal CMMS
+ * Scaffold only. No business logic.
+ */
+
+export interface ReportingQualityAssessmentEventsPlaceholder {
+  placeholder?: unknown;
+}
+
+export class ReportingQualityAssessmentEvents {}
