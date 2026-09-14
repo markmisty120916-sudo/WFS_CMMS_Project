@@ -144,29 +144,16 @@ export function recommendWorkorderHandling(
     combinedRecommendation = true;
   }
 
-  const output: WorkorderHandlingRecommendationResult = {
-    workorderId: asLabel(input.workorderId),
-    preemptivePartsCheck,
+  return {
+    preemptivePartsCheck: preemptivePartsCheck ?? false,
     workorderFusion: {
-      highRiskHighEffort,
-      mediumRiskLongDuration,
-      combinedRecommendation,
+      highRiskHighEffort: highRiskHighEffort ?? false,
+      mediumRiskLongDuration: mediumRiskLongDuration ?? false,
+      combinedRecommendation: combinedRecommendation ?? false,
     },
     autoFlagCategory: 'none',
+    workorderId: asLabel(input.workorderId),
     technicianSkillRecommendation,
     partsReadinessRecommendation,
-  };
-
-  return {
-    preemptivePartsCheck: output.preemptivePartsCheck ?? false,
-    workorderFusion: {
-      highRiskHighEffort: output.workorderFusion?.highRiskHighEffort ?? false,
-      mediumRiskLongDuration: output.workorderFusion?.mediumRiskLongDuration ?? false,
-      combinedRecommendation: output.workorderFusion?.combinedRecommendation ?? false,
-    },
-    autoFlagCategory: output.autoFlagCategory ?? 'none',
-    workorderId: output.workorderId,
-    technicianSkillRecommendation: output.technicianSkillRecommendation,
-    partsReadinessRecommendation: output.partsReadinessRecommendation,
   };
 }

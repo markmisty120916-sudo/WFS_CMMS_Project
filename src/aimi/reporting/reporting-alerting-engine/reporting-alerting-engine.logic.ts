@@ -107,27 +107,15 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     combinedAlert = true;
   }
 
-  const output: ReportingAlertingResult = {
-    reportId: asLabel(input.reportId),
-    alertFlag,
-    autoFlagCategory,
-    alertFusion: {
-      severityAndDelay,
-      durationAndCapacity,
-      combinedAlert,
-    },
-    alertCategory,
-  };
-
   return {
-    autoFlagCategory: output.autoFlagCategory ?? 'none',
+    autoFlagCategory: autoFlagCategory ?? 'none',
     alertFusion: {
-      severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
-      durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
-      combinedAlert: output.alertFusion?.combinedAlert ?? false,
+      severityAndDelay: severityAndDelay ?? false,
+      durationAndCapacity: durationAndCapacity ?? false,
+      combinedAlert: combinedAlert ?? false,
     },
-    reportId: output.reportId,
-    alertFlag: output.alertFlag,
-    alertCategory: output.alertCategory,
+    reportId: asLabel(input.reportId),
+    alertFlag: alertFlag ?? false,
+    alertCategory,
   };
 }

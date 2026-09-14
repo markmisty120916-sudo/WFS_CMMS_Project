@@ -126,35 +126,19 @@ export function routeFleethealthAlert(
     combinedRecommendation = true;
   }
 
-  const output: FleetHealthAlertRoutingResult = {
+  return {
+    escalationRecommended: escalationRecommended ?? false,
+    escalationFusion: {
+      highSeverityAndTrend: highSeverityAndTrend ?? false,
+      imminentFailure: imminentFailure ?? false,
+      combinedRecommendation: combinedRecommendation ?? false,
+    },
+    autoFlagCategory: 'none',
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
     predictedFailureWindow,
     projectedSeverity,
     trend,
-    escalationRecommended,
-    escalationFusion: {
-      highSeverityAndTrend,
-      imminentFailure,
-      combinedRecommendation,
-    },
-    autoFlagCategory: 'none',
     routingTarget,
-  };
-
-  return {
-    escalationRecommended: output.escalationRecommended ?? false,
-    escalationFusion: {
-      highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
-      imminentFailure: output.escalationFusion?.imminentFailure ?? false,
-      combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
-    },
-    autoFlagCategory: output.autoFlagCategory ?? 'none',
-    recordId: output.recordId,
-    severity: output.severity,
-    predictedFailureWindow: output.predictedFailureWindow,
-    projectedSeverity: output.projectedSeverity,
-    trend: output.trend,
-    routingTarget: output.routingTarget,
   };
 }
