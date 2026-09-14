@@ -144,7 +144,7 @@ export function recommendWorkorderHandling(
     combinedRecommendation = true;
   }
 
-  const output: WorkorderHandlingRecommendationResult = {
+  const assembled: WorkorderHandlingRecommendationResult = {
     workorderId: asLabel(input.workorderId),
     preemptivePartsCheck,
     workorderFusion: {
@@ -157,16 +157,18 @@ export function recommendWorkorderHandling(
     partsReadinessRecommendation,
   };
 
-  return {
-    workorderId: output.workorderId,
-    preemptivePartsCheck: output.preemptivePartsCheck ?? false,
+  const output = {
+    workorderId: assembled.workorderId,
+    preemptivePartsCheck: assembled.preemptivePartsCheck ?? false,
     workorderFusion: {
-      highRiskHighEffort: output.workorderFusion?.highRiskHighEffort ?? false,
-      mediumRiskLongDuration: output.workorderFusion?.mediumRiskLongDuration ?? false,
-      combinedRecommendation: output.workorderFusion?.combinedRecommendation ?? false,
+      highRiskHighEffort: assembled.workorderFusion?.highRiskHighEffort ?? false,
+      mediumRiskLongDuration: assembled.workorderFusion?.mediumRiskLongDuration ?? false,
+      combinedRecommendation: assembled.workorderFusion?.combinedRecommendation ?? false,
     },
-    autoFlagCategory: output.autoFlagCategory ?? 'none',
-    technicianSkillRecommendation: output.technicianSkillRecommendation,
-    partsReadinessRecommendation: output.partsReadinessRecommendation,
+    autoFlagCategory: assembled.autoFlagCategory ?? 'none',
+    technicianSkillRecommendation: assembled.technicianSkillRecommendation,
+    partsReadinessRecommendation: assembled.partsReadinessRecommendation,
   };
+
+  return output;
 }

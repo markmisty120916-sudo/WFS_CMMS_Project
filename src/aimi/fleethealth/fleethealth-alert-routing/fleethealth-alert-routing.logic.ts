@@ -126,7 +126,7 @@ export function routeFleethealthAlert(
     combinedRecommendation = true;
   }
 
-  const output: FleetHealthAlertRoutingResult = {
+  const assembled: FleetHealthAlertRoutingResult = {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
     predictedFailureWindow,
@@ -142,19 +142,21 @@ export function routeFleethealthAlert(
     routingTarget,
   };
 
-  return {
-    recordId: output.recordId,
-    severity: output.severity,
-    predictedFailureWindow: output.predictedFailureWindow,
-    projectedSeverity: output.projectedSeverity,
-    trend: output.trend,
-    escalationRecommended: output.escalationRecommended ?? false,
+  const output = {
+    recordId: assembled.recordId,
+    severity: assembled.severity,
+    predictedFailureWindow: assembled.predictedFailureWindow,
+    projectedSeverity: assembled.projectedSeverity,
+    trend: assembled.trend,
+    escalationRecommended: assembled.escalationRecommended ?? false,
     escalationFusion: {
-      highSeverityAndTrend: output.escalationFusion?.highSeverityAndTrend ?? false,
-      imminentFailure: output.escalationFusion?.imminentFailure ?? false,
-      combinedRecommendation: output.escalationFusion?.combinedRecommendation ?? false,
+      highSeverityAndTrend: assembled.escalationFusion?.highSeverityAndTrend ?? false,
+      imminentFailure: assembled.escalationFusion?.imminentFailure ?? false,
+      combinedRecommendation: assembled.escalationFusion?.combinedRecommendation ?? false,
     },
-    autoFlagCategory: output.autoFlagCategory ?? 'none',
-    routingTarget: output.routingTarget,
+    autoFlagCategory: assembled.autoFlagCategory ?? 'none',
+    routingTarget: assembled.routingTarget,
   };
+
+  return output;
 }
