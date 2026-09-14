@@ -25,12 +25,12 @@ export type FleetHealthEscalationFusion = {
 export type FleetHealthAlertRoutingResult = {
   recordId: string;
   severity: string;
-  routingTarget: FleetHealthRoutingTarget;
   predictedFailureWindow: number | null;
   projectedSeverity: FleetHealthProjectedSeverity;
   trend: 'worsening' | 'improving' | 'stable' | 'unknown';
   escalationRecommended: boolean;
   escalationFusion: FleetHealthEscalationFusion;
+  routingTarget: FleetHealthRoutingTarget;
 };
 
 function asLabel(value: string | undefined): string {
@@ -128,7 +128,6 @@ export function routeFleethealthAlert(
   const output: FleetHealthAlertRoutingResult = {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
-    routingTarget,
     predictedFailureWindow,
     projectedSeverity,
     trend,
@@ -138,6 +137,7 @@ export function routeFleethealthAlert(
       imminentFailure,
       combinedRecommendation,
     },
+    routingTarget,
   };
 
   output.escalationRecommended ??= false;

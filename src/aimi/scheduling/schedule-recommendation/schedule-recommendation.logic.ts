@@ -67,10 +67,10 @@ export type ScheduleFusion = {
 
 export type ScheduleOptionsRecommendationResult = {
   scheduleId: string;
-  slotRecommendation: ScheduleSlotRecommendation;
-  capacityRecommendation: ScheduleCapacityRecommendation;
   bufferRecommended: boolean;
   scheduleFusion: ScheduleFusion;
+  slotRecommendation: ScheduleSlotRecommendation;
+  capacityRecommendation: ScheduleCapacityRecommendation;
 };
 
 export function recommendScheduleOptions(
@@ -140,14 +140,14 @@ export function recommendScheduleOptions(
 
   const output: ScheduleOptionsRecommendationResult = {
     scheduleId: asLabel(input.scheduleId),
-    slotRecommendation,
-    capacityRecommendation,
     bufferRecommended,
     scheduleFusion: {
       delayAndLowCapacity,
       feasibleButRisky,
       combinedRecommendation,
     },
+    slotRecommendation,
+    capacityRecommendation,
   };
 
   output.bufferRecommended ??= false;

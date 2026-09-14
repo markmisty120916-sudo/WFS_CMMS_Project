@@ -66,13 +66,13 @@ export type WorkorderFusion = {
 
 export type WorkorderHandlingRecommendationResult = {
   workorderId: string;
+  preemptivePartsCheck: boolean;
+  workorderFusion: WorkorderFusion;
   technicianSkillRecommendation: 'senior' | 'intermediate' | 'junior';
   partsReadinessRecommendation:
     | 'pre-stage critical parts'
     | 'verify parts availability'
     | 'standard parts flow';
-  preemptivePartsCheck: boolean;
-  workorderFusion: WorkorderFusion;
 };
 
 export function recommendWorkorderHandling(
@@ -145,14 +145,14 @@ export function recommendWorkorderHandling(
 
   const output: WorkorderHandlingRecommendationResult = {
     workorderId: asLabel(input.workorderId),
-    technicianSkillRecommendation,
-    partsReadinessRecommendation,
     preemptivePartsCheck,
     workorderFusion: {
       highRiskHighEffort,
       mediumRiskLongDuration,
       combinedRecommendation,
     },
+    technicianSkillRecommendation,
+    partsReadinessRecommendation,
   };
 
   output.preemptivePartsCheck ??= false;

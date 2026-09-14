@@ -35,9 +35,9 @@ export type ReportingAlertFusion = {
 export type ReportingAlertingResult = {
   reportId: string;
   alertFlag: boolean;
-  alertCategory: ReportingAlertCategory;
   autoFlagCategory: ReportingAutoFlagCategory;
   alertFusion: ReportingAlertFusion;
+  alertCategory: ReportingAlertCategory;
 };
 
 function asCount(value: number | undefined): number {
@@ -110,13 +110,13 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
   const output: ReportingAlertingResult = {
     reportId: asLabel(input.reportId),
     alertFlag,
-    alertCategory,
     autoFlagCategory,
     alertFusion: {
       severityAndDelay,
       durationAndCapacity,
       combinedAlert,
     },
+    alertCategory,
   };
 
   output.autoFlagCategory ??= 'none';
