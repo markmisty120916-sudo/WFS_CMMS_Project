@@ -125,7 +125,7 @@ export function routeFleethealthAlert(
     combinedRecommendation = true;
   }
 
-  return {
+  const output: FleetHealthAlertRoutingResult = {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
     routingTarget,
@@ -139,4 +139,13 @@ export function routeFleethealthAlert(
       combinedRecommendation,
     },
   };
+
+  output.escalationRecommended ??= false;
+  output.escalationFusion ??= {
+    highSeverityAndTrend: false,
+    imminentFailure: false,
+    combinedRecommendation: false,
+  };
+
+  return output;
 }

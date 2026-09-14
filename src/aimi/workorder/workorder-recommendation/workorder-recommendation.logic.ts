@@ -143,7 +143,7 @@ export function recommendWorkorderHandling(
     combinedRecommendation = true;
   }
 
-  return {
+  const output: WorkorderHandlingRecommendationResult = {
     workorderId: asLabel(input.workorderId),
     technicianSkillRecommendation,
     partsReadinessRecommendation,
@@ -154,4 +154,13 @@ export function recommendWorkorderHandling(
       combinedRecommendation,
     },
   };
+
+  output.preemptivePartsCheck ??= false;
+  output.workorderFusion ??= {
+    highRiskHighEffort: false,
+    mediumRiskLongDuration: false,
+    combinedRecommendation: false,
+  };
+
+  return output;
 }

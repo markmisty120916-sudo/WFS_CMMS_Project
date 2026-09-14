@@ -138,7 +138,7 @@ export function recommendScheduleOptions(
     combinedRecommendation = true;
   }
 
-  return {
+  const output: ScheduleOptionsRecommendationResult = {
     scheduleId: asLabel(input.scheduleId),
     slotRecommendation,
     capacityRecommendation,
@@ -149,4 +149,13 @@ export function recommendScheduleOptions(
       combinedRecommendation,
     },
   };
+
+  output.bufferRecommended ??= false;
+  output.scheduleFusion ??= {
+    delayAndLowCapacity: false,
+    feasibleButRisky: false,
+    combinedRecommendation: false,
+  };
+
+  return output;
 }

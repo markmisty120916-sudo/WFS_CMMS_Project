@@ -107,7 +107,7 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     combinedAlert = true;
   }
 
-  return {
+  const output: ReportingAlertingResult = {
     reportId: asLabel(input.reportId),
     alertFlag,
     alertCategory,
@@ -118,4 +118,13 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
       combinedAlert,
     },
   };
+
+  output.autoFlagCategory ??= 'none';
+  output.alertFusion ??= {
+    severityAndDelay: false,
+    durationAndCapacity: false,
+    combinedAlert: false,
+  };
+
+  return output;
 }
