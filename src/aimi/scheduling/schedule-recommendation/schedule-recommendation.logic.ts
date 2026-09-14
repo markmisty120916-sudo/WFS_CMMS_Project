@@ -139,7 +139,7 @@ export function recommendScheduleOptions(
     combinedRecommendation = true;
   }
 
-  const assembled: ScheduleOptionsRecommendationResult = {
+  const output: ScheduleOptionsRecommendationResult = {
     scheduleId: asLabel(input.scheduleId),
     bufferRecommended,
     scheduleFusion: {
@@ -152,18 +152,16 @@ export function recommendScheduleOptions(
     capacityRecommendation,
   };
 
-  const output = {
-    scheduleId: assembled.scheduleId,
-    bufferRecommended: assembled.bufferRecommended ?? false,
+  return {
+    scheduleId: output.scheduleId,
+    bufferRecommended: output.bufferRecommended ?? false,
     scheduleFusion: {
-      delayAndLowCapacity: assembled.scheduleFusion?.delayAndLowCapacity ?? false,
-      feasibleButRisky: assembled.scheduleFusion?.feasibleButRisky ?? false,
-      combinedRecommendation: assembled.scheduleFusion?.combinedRecommendation ?? false,
+      delayAndLowCapacity: output.scheduleFusion?.delayAndLowCapacity ?? false,
+      feasibleButRisky: output.scheduleFusion?.feasibleButRisky ?? false,
+      combinedRecommendation: output.scheduleFusion?.combinedRecommendation ?? false,
     },
-    autoFlagCategory: assembled.autoFlagCategory ?? 'none',
-    slotRecommendation: assembled.slotRecommendation,
-    capacityRecommendation: assembled.capacityRecommendation,
+    autoFlagCategory: output.autoFlagCategory ?? 'none',
+    slotRecommendation: output.slotRecommendation,
+    capacityRecommendation: output.capacityRecommendation,
   };
-
-  return output;
 }

@@ -107,7 +107,7 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     combinedAlert = true;
   }
 
-  const assembled: ReportingAlertingResult = {
+  const output: ReportingAlertingResult = {
     reportId: asLabel(input.reportId),
     alertFlag,
     autoFlagCategory,
@@ -119,17 +119,15 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     alertCategory,
   };
 
-  const output = {
-    reportId: assembled.reportId,
-    alertFlag: assembled.alertFlag,
-    autoFlagCategory: assembled.autoFlagCategory ?? 'none',
+  return {
+    reportId: output.reportId,
+    alertFlag: output.alertFlag,
+    autoFlagCategory: output.autoFlagCategory ?? 'none',
     alertFusion: {
-      severityAndDelay: assembled.alertFusion?.severityAndDelay ?? false,
-      durationAndCapacity: assembled.alertFusion?.durationAndCapacity ?? false,
-      combinedAlert: assembled.alertFusion?.combinedAlert ?? false,
+      severityAndDelay: output.alertFusion?.severityAndDelay ?? false,
+      durationAndCapacity: output.alertFusion?.durationAndCapacity ?? false,
+      combinedAlert: output.alertFusion?.combinedAlert ?? false,
     },
-    alertCategory: assembled.alertCategory,
+    alertCategory: output.alertCategory,
   };
-
-  return output;
 }
