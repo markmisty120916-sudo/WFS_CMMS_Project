@@ -54,7 +54,14 @@ export type WorkorderRiskLevel = 'low' | 'medium' | 'high' | 'unknown';
 export type WorkorderHandlingRecommendationInput = {
   workorderId?: string;
   predictedEffortScore?: number | null;
+  predictedDurationMinutes?: number | null;
   riskLevel?: WorkorderRiskLevel;
+};
+
+export type WorkorderFusion = {
+  highRiskHighEffort: boolean;
+  mediumRiskLongDuration: boolean;
+  combinedRecommendation: boolean;
 };
 
 export type WorkorderHandlingRecommendationResult = {
@@ -65,6 +72,7 @@ export type WorkorderHandlingRecommendationResult = {
     | 'verify parts availability'
     | 'standard parts flow';
   preemptivePartsCheck: boolean;
+  workorderFusion: WorkorderFusion;
 };
 
 export function recommendWorkorderHandling(
@@ -105,10 +113,45 @@ export function recommendWorkorderHandling(
     preemptivePartsCheck = true;
   }
 
+  let highRiskHighEffort = false;
+  if (input.riskLevel === 'high') {
+    if (input.predictedEffortScore !== undefined) {
+      if (input.predictedEffortScore !== null) {
+        if (input.predictedEffortScore >= 5) {
+          highRiskHighEffort = true;
+        }
+      }
+    }
+  }
+
+  let mediumRiskLongDuration = false;
+  if (input.riskLevel === 'medium') {
+    if (input.predictedDurationMinutes !== undefined) {
+      if (input.predictedDurationMinutes !== null) {
+        if (input.predictedDurationMinutes >= 240) {
+          mediumRiskLongDuration = true;
+        }
+      }
+    }
+  }
+
+  let combinedRecommendation = false;
+  if (highRiskHighEffort) {
+    combinedRecommendation = true;
+  }
+  if (mediumRiskLongDuration) {
+    combinedRecommendation = true;
+  }
+
   return {
     workorderId: asLabel(input.workorderId),
     technicianSkillRecommendation,
     partsReadinessRecommendation,
     preemptivePartsCheck,
+    workorderFusion: {
+      highRiskHighEffort,
+      mediumRiskLongDuration,
+      combinedRecommendation,
+    },
   };
 }

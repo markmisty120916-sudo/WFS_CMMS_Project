@@ -59,11 +59,18 @@ export type ScheduleOptionsRecommendationInput = {
   predictedDelayMinutes?: number | null;
 };
 
+export type ScheduleFusion = {
+  delayAndLowCapacity: boolean;
+  feasibleButRisky: boolean;
+  combinedRecommendation: boolean;
+};
+
 export type ScheduleOptionsRecommendationResult = {
   scheduleId: string;
   slotRecommendation: ScheduleSlotRecommendation;
   capacityRecommendation: ScheduleCapacityRecommendation;
   bufferRecommended: boolean;
+  scheduleFusion: ScheduleFusion;
 };
 
 export function recommendScheduleOptions(
@@ -101,10 +108,45 @@ export function recommendScheduleOptions(
     }
   }
 
+  let delayAndLowCapacity = false;
+  if (input.predictedDelayMinutes !== undefined) {
+    if (input.predictedDelayMinutes !== null) {
+      if (input.predictedDelayMinutes > 30) {
+        if (input.projectedCapacity === 'low') {
+          delayAndLowCapacity = true;
+        }
+      }
+    }
+  }
+
+  let feasibleButRisky = false;
+  if (input.slotFeasible === true) {
+    if (input.predictedDelayMinutes !== undefined) {
+      if (input.predictedDelayMinutes !== null) {
+        if (input.predictedDelayMinutes > 45) {
+          feasibleButRisky = true;
+        }
+      }
+    }
+  }
+
+  let combinedRecommendation = false;
+  if (delayAndLowCapacity) {
+    combinedRecommendation = true;
+  }
+  if (feasibleButRisky) {
+    combinedRecommendation = true;
+  }
+
   return {
     scheduleId: asLabel(input.scheduleId),
     slotRecommendation,
     capacityRecommendation,
     bufferRecommended,
+    scheduleFusion: {
+      delayAndLowCapacity,
+      feasibleButRisky,
+      combinedRecommendation,
+    },
   };
 }

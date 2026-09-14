@@ -16,6 +16,12 @@ export type FleetHealthAlertRoutingInput = {
   trend?: 'worsening' | 'improving' | 'stable' | 'unknown';
 };
 
+export type FleetHealthEscalationFusion = {
+  highSeverityAndTrend: boolean;
+  imminentFailure: boolean;
+  combinedRecommendation: boolean;
+};
+
 export type FleetHealthAlertRoutingResult = {
   recordId: string;
   severity: string;
@@ -24,6 +30,7 @@ export type FleetHealthAlertRoutingResult = {
   projectedSeverity: FleetHealthProjectedSeverity;
   trend: 'worsening' | 'improving' | 'stable' | 'unknown';
   escalationRecommended: boolean;
+  escalationFusion: FleetHealthEscalationFusion;
 };
 
 function asLabel(value: string | undefined): string {
@@ -96,6 +103,28 @@ export function routeFleethealthAlert(
     }
   }
 
+  let highSeverityAndTrend = false;
+  if (projectedSeverity === 'high') {
+    if (trend === 'worsening') {
+      highSeverityAndTrend = true;
+    }
+  }
+
+  let imminentFailure = false;
+  if (predictedFailureWindow !== null) {
+    if (predictedFailureWindow <= 120) {
+      imminentFailure = true;
+    }
+  }
+
+  let combinedRecommendation = false;
+  if (highSeverityAndTrend) {
+    combinedRecommendation = true;
+  }
+  if (imminentFailure) {
+    combinedRecommendation = true;
+  }
+
   return {
     recordId: asLabel(input.recordId),
     severity: asLabel(input.severity),
@@ -104,5 +133,10 @@ export function routeFleethealthAlert(
     projectedSeverity,
     trend,
     escalationRecommended,
+    escalationFusion: {
+      highSeverityAndTrend,
+      imminentFailure,
+      combinedRecommendation,
+    },
   };
 }

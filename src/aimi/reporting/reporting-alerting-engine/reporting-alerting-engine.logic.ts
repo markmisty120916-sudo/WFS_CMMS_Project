@@ -26,11 +26,18 @@ export type ReportingAlertCategory = 'risk_severity' | 'risk_schedule' | 'none';
 
 export type ReportingAutoFlagCategory = 'severity' | 'schedule' | 'none';
 
+export type ReportingAlertFusion = {
+  severityAndDelay: boolean;
+  durationAndCapacity: boolean;
+  combinedAlert: boolean;
+};
+
 export type ReportingAlertingResult = {
   reportId: string;
   alertFlag: boolean;
   alertCategory: ReportingAlertCategory;
   autoFlagCategory: ReportingAutoFlagCategory;
+  alertFusion: ReportingAlertFusion;
 };
 
 function asCount(value: number | undefined): number {
@@ -77,10 +84,38 @@ export function generateReportingAlerts(input: ReportingAlertingInput): Reportin
     }
   }
 
+  let severityAndDelay = false;
+  let durationAndCapacity = false;
+  if (input.predictionSummary !== undefined) {
+    if (asCount(input.predictionSummary.highSeverity) > 0) {
+      if (asCount(input.predictionSummary.delays) > 0) {
+        severityAndDelay = true;
+      }
+    }
+    if (asCount(input.predictionSummary.longDurations) > 0) {
+      if (asCount(input.predictionSummary.capacityLow) > 0) {
+        durationAndCapacity = true;
+      }
+    }
+  }
+
+  let combinedAlert = false;
+  if (severityAndDelay) {
+    combinedAlert = true;
+  }
+  if (durationAndCapacity) {
+    combinedAlert = true;
+  }
+
   return {
     reportId: asLabel(input.reportId),
     alertFlag,
     alertCategory,
     autoFlagCategory,
+    alertFusion: {
+      severityAndDelay,
+      durationAndCapacity,
+      combinedAlert,
+    },
   };
 }
