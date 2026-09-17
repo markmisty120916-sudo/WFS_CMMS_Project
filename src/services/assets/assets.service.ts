@@ -1,14 +1,5 @@
-/**
- * Assets Service
- * Master Blueprint V2 / architecture.md §3.2 / API-SPEC §3 / BACKEND-STRUCTURE §9
- * Tenant-scoped asset CRUD. AIMI health is read-only. No global instance.
- */
-
 import type { Database } from "../../core/database/database.interface";
-import {
-  createPreparedStatement,
-  type PreparedStatement,
-} from "../../core/database/prepared-statement";
+import { createPreparedStatement } from "../../core/database/prepared-statement";
 import type { DtoRole } from "../../core/dto/base.dto";
 import type { ContextDto } from "../../core/dto/context.dto";
 import { createError } from "../../core/errors/error-factory";
@@ -24,27 +15,29 @@ import type { RuleEngineService } from "../../core/rule-engine/rule-engine.servi
 import { contextSchema, toRuleContext } from "../../core/validation/context.schema";
 import { asRecord, asString } from "../../core/validation/dto.schema";
 import { parseDtoRole } from "../../core/validation/role.schema";
+import { isAssetApiAllowed } from "./api/asset.api.permissions";
 import {
   buildAssetForCreate,
   buildAssetForSoftDelete,
   buildAssetForUpdate,
-  buildAssetFromRow,
-  buildAssetHealthFromRow,
-  buildAssetTelematicsFromRow,
+  buildAssetProfile,
   parseAssetListQuery,
   parseAssetWriteInput,
 } from "./assets-builder";
-import { assetAuditLogId } from "./assets-events";
+import { assetAuditLogId, type AssetAuditAction } from "./assets-events";
 import { assetListError, assetReadError, assetWriteError } from "./assets-rules";
 import {
-  freezeAssetDetail,
   freezeAssetListResult,
   type Asset,
-  type AssetDetail,
-  type AssetHealth,
   type AssetListResult,
-  type AssetTelematics,
+  type AssetProfile,
 } from "./assets.interface";
+import { AssetHealthEngine } from "./engines/asset-health.engine";
+import { AssetHistoryEngine } from "./engines/asset-history.engine";
+import { AssetProfileEngine } from "./engines/asset-profile.engine";
+import { AssetReadinessEngine } from "./engines/asset-readiness.engine";
+import { AssetTelematicsEngine } from "./engines/asset-telematics.engine";
+import { filterAssignedAssets, listQueryHasUnsupportedGroup } from "./utils/asset-filters";
 
 export type AssetsServiceOptions = {
   tenant_id: string;
@@ -79,6 +72,11 @@ export class AssetsService {
   private readonly auditLogHook: AuditLogHook;
   private readonly ruleEngine: RuleEngineService;
   private readonly lifecycleEngine: LifecycleEngineService;
+  private readonly profileEngine: AssetProfileEngine;
+  private readonly healthEngine: AssetHealthEngine;
+  private readonly telematicsEngine: AssetTelematicsEngine;
+  private readonly readinessEngine: AssetReadinessEngine;
+  private readonly historyEngine: AssetHistoryEngine;
 
   constructor(options: AssetsServiceOptions) {
     if (options.tenant_id === "") {
@@ -91,6 +89,11 @@ export class AssetsService {
     this.auditLogHook = options.auditLogHook;
     this.ruleEngine = options.ruleEngine;
     this.lifecycleEngine = options.lifecycleEngine;
+    this.profileEngine = new AssetProfileEngine(options.tenant_id, options.database);
+    this.healthEngine = new AssetHealthEngine(options.tenant_id, options.database);
+    this.telematicsEngine = new AssetTelematicsEngine(options.tenant_id, options.database);
+    this.readinessEngine = new AssetReadinessEngine(options.tenant_id, options.database);
+    this.historyEngine = new AssetHistoryEngine(options.tenant_id, options.database);
   }
 
   async list(contextInput: unknown, queryInput: unknown): Promise<Result<AssetListResult>> {
@@ -100,39 +103,28 @@ export class AssetsService {
     }
     const dto = opened.value;
     const context = resultContextFromDto(dto);
-
+    if (isAssetApiAllowed("list", dto.role) === false) {
+      return this.fail("role unauthorized", context);
+    }
     const listGate = assetListError(dto.role, dto.entity_id);
     if (listGate !== "none") {
       return this.fail(listGate, context);
     }
-
     const query = parseAssetListQuery(queryInput);
-    if (query.success === false || query.value === null) {
-      return this.fail(query.error_code, context);
+    if (query.success === false || query.data === null) {
+      const error_type: ErrorType = query.error_code === "none" ? "dto invalid" : query.error_code;
+      return this.fail(error_type, context);
     }
-
-    if (dto.role === "DRIVER") {
-      const assigned = await this.loadAsset(dto.entity_id);
-      if (assigned === null) {
-        return this.fail("entity_id mismatch", context);
-      }
-      const assignedRead = assetReadError(dto.role, dto.entity_id, assigned.asset_id);
-      if (assignedRead !== "none") {
-        return this.fail(assignedRead, context);
-      }
-      return ok(
-        freezeAssetListResult({
-          tenant_id: this.tenant_id,
-          role: dto.role,
-          assets: [assigned],
-        }),
-        context,
-      );
+    if (listQueryHasUnsupportedGroup(query.data) === true) {
+      return this.fail("dto invalid", context);
     }
-
-    const assets = await this.loadAssetList(query.value.status);
-    if (assets === null) {
+    const loaded = await this.profileEngine.loadList(query.data.status);
+    if (loaded === null) {
       return this.fail("tenant_id mismatch", context);
+    }
+    let assets = loaded;
+    if (dto.role === "DRIVER" || dto.role === "TECHNICIAN") {
+      assets = filterAssignedAssets(loaded, dto.entity_id);
     }
     return ok(
       freezeAssetListResult({
@@ -144,14 +136,16 @@ export class AssetsService {
     );
   }
 
-  async get(contextInput: unknown, asset_id: string): Promise<Result<AssetDetail>> {
+  async get(contextInput: unknown, asset_id: string): Promise<Result<AssetProfile>> {
     const opened = await this.open(contextInput);
     if (opened.ok === false) {
       return opened;
     }
     const dto = opened.value;
     const context = resultContextFromDto(dto);
-
+    if (isAssetApiAllowed("get", dto.role) === false) {
+      return this.fail("role unauthorized", context);
+    }
     if (asset_id === "") {
       return this.fail("entity_id required", context);
     }
@@ -159,27 +153,11 @@ export class AssetsService {
     if (readGate !== "none") {
       return this.fail(readGate, context);
     }
-
-    const asset = await this.loadAsset(asset_id);
-    if (asset === null) {
+    const profile = await this.loadProfile(asset_id);
+    if (profile === null) {
       return this.fail("entity_id mismatch", context);
     }
-    const health = await this.loadHealth(asset_id);
-    if (health === "error") {
-      return this.fail("tenant_id mismatch", context);
-    }
-    const telematics = await this.loadTelematics(asset_id);
-    if (telematics === null) {
-      return this.fail("tenant_id mismatch", context);
-    }
-    return ok(
-      freezeAssetDetail({
-        asset,
-        health,
-        telematics,
-      }),
-      context,
-    );
+    return ok(profile, context);
   }
 
   async create(contextInput: unknown, bodyInput: unknown): Promise<Result<Asset>> {
@@ -189,7 +167,9 @@ export class AssetsService {
     }
     const dto = opened.value;
     const context = resultContextFromDto(dto);
-
+    if (isAssetApiAllowed("create", dto.role) === false) {
+      return this.fail("role unauthorized", context);
+    }
     const writeGate = assetWriteError(dto.role);
     if (writeGate !== "none") {
       return this.fail(writeGate, context);
@@ -197,23 +177,23 @@ export class AssetsService {
     if (dto.entity_id === "") {
       return this.fail("entity_id required", context);
     }
-
-    const parsedBody = parseAssetWriteInput(bodyInput);
-    if (parsedBody.success === false || parsedBody.value === null) {
-      return this.fail(parsedBody.error_code, context);
+    const parsedBody = parseAssetWriteInput(bodyInput, "create");
+    if (parsedBody.success === false || parsedBody.data === null) {
+      const error_type: ErrorType =
+        parsedBody.error_code === "none" ? "dto invalid" : parsedBody.error_code;
+      return this.fail(error_type, context);
     }
     const built = buildAssetForCreate(
       this.tenant_id,
       dto.entity_id,
       dto.timestamp,
-      parsedBody.value,
+      parsedBody.data,
     );
     if (built.success === false || built.value === null) {
       return this.fail(built.error_code, context);
     }
-
     await this.insertAsset(built.value);
-    await this.auditAsset(dto, built.value, "created");
+    await this.auditAsset(dto, built.value, "asset.created", "created");
     return ok(built.value, context);
   }
 
@@ -228,7 +208,9 @@ export class AssetsService {
     }
     const dto = opened.value;
     const context = resultContextFromDto(dto);
-
+    if (isAssetApiAllowed("update", dto.role) === false) {
+      return this.fail("role unauthorized", context);
+    }
     const writeGate = assetWriteError(dto.role);
     if (writeGate !== "none") {
       return this.fail(writeGate, context);
@@ -236,22 +218,22 @@ export class AssetsService {
     if (asset_id === "") {
       return this.fail("entity_id required", context);
     }
-
-    const current = await this.loadAsset(asset_id);
+    const current = await this.profileEngine.load(asset_id);
     if (current === null) {
       return this.fail("entity_id mismatch", context);
     }
-    const parsedBody = parseAssetWriteInput(bodyInput);
-    if (parsedBody.success === false || parsedBody.value === null) {
-      return this.fail(parsedBody.error_code, context);
+    const parsedBody = parseAssetWriteInput(bodyInput, "update");
+    if (parsedBody.success === false || parsedBody.data === null) {
+      const error_type: ErrorType =
+        parsedBody.error_code === "none" ? "dto invalid" : parsedBody.error_code;
+      return this.fail(error_type, context);
     }
-    const built = buildAssetForUpdate(current, dto.timestamp, parsedBody.value);
+    const built = buildAssetForUpdate(current, dto.timestamp, parsedBody.data);
     if (built.success === false || built.value === null) {
       return this.fail(built.error_code, context);
     }
-
     await this.updateAsset(built.value);
-    await this.auditAsset(dto, built.value, "updated");
+    await this.auditAsset(dto, built.value, "asset.updated", "updated");
     return ok(built.value, context);
   }
 
@@ -262,7 +244,9 @@ export class AssetsService {
     }
     const dto = opened.value;
     const context = resultContextFromDto(dto);
-
+    if (isAssetApiAllowed("remove", dto.role) === false) {
+      return this.fail("role unauthorized", context);
+    }
     const writeGate = assetWriteError(dto.role);
     if (writeGate !== "none") {
       return this.fail(writeGate, context);
@@ -270,8 +254,7 @@ export class AssetsService {
     if (asset_id === "") {
       return this.fail("entity_id required", context);
     }
-
-    const current = await this.loadAsset(asset_id);
+    const current = await this.profileEngine.load(asset_id);
     if (current === null) {
       return this.fail("entity_id mismatch", context);
     }
@@ -279,10 +262,42 @@ export class AssetsService {
     if (built.success === false || built.value === null) {
       return this.fail(built.error_code, context);
     }
-
     await this.softDeleteAsset(built.value);
-    await this.auditAsset(dto, built.value, "deleted");
+    await this.auditAsset(dto, built.value, "asset.updated", "deleted");
     return ok(built.value, context);
+  }
+
+  private async loadProfile(asset_id: string): Promise<AssetProfile | null> {
+    const asset = await this.profileEngine.load(asset_id);
+    if (asset === null) {
+      return null;
+    }
+    const health = await this.healthEngine.load(asset_id);
+    if (health === "error") {
+      return null;
+    }
+    const telematics = await this.telematicsEngine.load(asset_id);
+    if (telematics === null) {
+      return null;
+    }
+    const pm_schedules = await this.readinessEngine.loadPmSchedules(asset_id);
+    if (pm_schedules === null) {
+      return null;
+    }
+    const history = await this.historyEngine.load(asset_id);
+    if (history === null) {
+      return null;
+    }
+    const readiness = this.readinessEngine.build(asset, health, telematics, pm_schedules);
+    return buildAssetProfile({
+      asset,
+      health,
+      telematics,
+      pm_schedules,
+      history,
+      meters: this.profileEngine.metersFromAsset(asset),
+      readiness,
+    });
   }
 
   private async open(contextInput: unknown): Promise<Result<ContextDto>> {
@@ -305,20 +320,17 @@ export class AssetsService {
       };
       return this.fail(error_type, context);
     }
-
     const dto = parsed.data;
     const context = resultContextFromDto(dto);
     if (dto.user_id === "") {
       return this.fail("user_id required", context);
     }
-
     const rule = await this.ruleEngine.evaluate(toRuleContext(dto));
     if (rule.allowed === false) {
       const error_type: ErrorType =
         rule.error_code === "none" ? "role unauthorized" : rule.error_code;
       return this.fail(error_type, context);
     }
-
     return ok(dto, context);
   }
 
@@ -363,84 +375,6 @@ export class AssetsService {
       correlation_id: context.correlation_id,
     });
     return err(error, context);
-  }
-
-  private async loadAsset(asset_id: string): Promise<Asset | null> {
-    const statement = createPreparedStatement(
-      "SELECT asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, created_at, updated_at, deleted_at FROM Assets WHERE tenant_id = $1 AND asset_id = $2 AND deleted_at IS NULL",
-      [this.tenant_id, asset_id],
-    );
-    const result = await this.database.execute(statement);
-    if (result.rows.length === 0) {
-      return null;
-    }
-    const built = buildAssetFromRow(this.tenant_id, result.rows[0]);
-    if (built.success === false || built.value === null) {
-      return null;
-    }
-    return built.value;
-  }
-
-  private async loadAssetList(status: string): Promise<readonly Asset[] | null> {
-    let statement: PreparedStatement;
-    if (status === "") {
-      statement = createPreparedStatement(
-        "SELECT asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, created_at, updated_at, deleted_at FROM Assets WHERE tenant_id = $1 AND deleted_at IS NULL",
-        [this.tenant_id],
-      );
-    } else {
-      statement = createPreparedStatement(
-        "SELECT asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, created_at, updated_at, deleted_at FROM Assets WHERE tenant_id = $1 AND deleted_at IS NULL AND status = $2",
-        [this.tenant_id, status],
-      );
-    }
-    const result = await this.database.execute(statement);
-    const assets: Asset[] = [];
-    let index = 0;
-    while (index < result.rows.length) {
-      const built = buildAssetFromRow(this.tenant_id, result.rows[index]);
-      if (built.success === false || built.value === null) {
-        return null;
-      }
-      assets.push(built.value);
-      index = index + 1;
-    }
-    return assets;
-  }
-
-  private async loadHealth(asset_id: string): Promise<AssetHealth | null | "error"> {
-    const statement = createPreparedStatement(
-      "SELECT health_id, tenant_id, asset_id, health_score, predictive_score, last_update, created_at, updated_at, deleted_at FROM AssetHealth WHERE tenant_id = $1 AND asset_id = $2 AND deleted_at IS NULL",
-      [this.tenant_id, asset_id],
-    );
-    const result = await this.database.execute(statement);
-    if (result.rows.length === 0) {
-      return null;
-    }
-    const built = buildAssetHealthFromRow(this.tenant_id, asset_id, result.rows[0]);
-    if (built.success === false || built.value === null) {
-      return "error";
-    }
-    return built.value;
-  }
-
-  private async loadTelematics(asset_id: string): Promise<readonly AssetTelematics[] | null> {
-    const statement = createPreparedStatement(
-      "SELECT telematics_id, tenant_id, asset_id, fault_code, fault_description, severity, timestamp, created_at, updated_at, deleted_at FROM AssetTelematics WHERE tenant_id = $1 AND asset_id = $2 AND deleted_at IS NULL",
-      [this.tenant_id, asset_id],
-    );
-    const result = await this.database.execute(statement);
-    const rows: AssetTelematics[] = [];
-    let index = 0;
-    while (index < result.rows.length) {
-      const built = buildAssetTelematicsFromRow(this.tenant_id, asset_id, result.rows[index]);
-      if (built.success === false || built.value === null) {
-        return null;
-      }
-      rows.push(built.value);
-      index = index + 1;
-    }
-    return rows;
   }
 
   private async insertAsset(asset: Asset): Promise<void> {
@@ -494,18 +428,23 @@ export class AssetsService {
     await this.database.execute(statement);
   }
 
-  private async auditAsset(dto: ContextDto, asset: Asset, new_value: string): Promise<void> {
-    this.logger.info("asset.updated");
+  private async auditAsset(
+    dto: ContextDto,
+    asset: Asset,
+    action: AssetAuditAction,
+    new_value: string,
+  ): Promise<void> {
+    this.logger.info(action);
     this.auditLogHook.write({
       level: "info",
-      message: "asset.updated",
+      message: action,
       tenant_id: asset.tenant_id,
       user_id: dto.user_id,
       role: dto.role,
       correlation_id: asset.asset_id,
       timestamp: asset.updated_at,
     });
-    const log_id = assetAuditLogId(asset, "asset.updated");
+    const log_id = assetAuditLogId(asset, action);
     const statement = createPreparedStatement(
       "INSERT INTO IntegrationLogs (log_id, tenant_id, event_id, message, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $5, NULL)",
       [
@@ -518,7 +457,7 @@ export class AssetsService {
           role: dto.role,
           asset_id: asset.asset_id,
           timestamp: asset.updated_at,
-          action: "asset.updated",
+          action,
           previous_value: "",
           new_value,
         }),
