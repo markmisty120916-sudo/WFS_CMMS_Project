@@ -1,44 +1,35 @@
-SESSION RESUME — WFS Universal CMMS
+Resume the current WFS + AIMI build session exactly where it left off. The last completed module was Assets Service at /src/services/assets/.
 
-The master blueprint (WFS_UNIVERSAL_CMMS_MASTER_[BLUEPRINT.md](http://BLUEPRINT.md)) is the single source of truth. All future code must follow the blueprint exactly. No inference, no drift, no population tiers, no synthesis tiers, no phantom phases.
+The next module in the deterministic Master Blueprint V2 sequence is:
 
-AIMI Tier and Phase Map (canonical):
+AIMI Output Normalizer (completed) → Assets Service (completed) → Workorders Service.
 
-Tier 1 — Interpretation
+Load:
 
-Phases: 100, 110, 120, 130, 140, 150, 160
+- /[cursor-anchor.md](http://cursor-anchor.md)
 
-Tier 2 — Classification
+- /[cursor-instructions.md](http://cursor-instructions.md)
 
-Phases: 200, 210, 220, 230, 240, 250, 260, 270, 280
+- /blueprints/[master-blueprint-v2.md](http://master-blueprint-v2.md)
 
-Tier 3 — Evaluation
+- /blueprints/[aimi.md](http://aimi.md)
 
-Phases: 300, 310, 320, 330, 340, 350, 360, 370
+Maintain all constraints:
 
-Tier 4 — Prediction
+- deterministic scaffolding
 
-Phases: 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 495
+- strict blueprint alignment
 
-Tier 5 — Optimization
+- zero drift
 
-Phases: 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 595, 597, 599
+- zero global state
 
-Tier 6 — Autonomous Action
+- strict RBAC + tenant boundaries
 
-Phases: 600, 610, 620, 630, 640, 650, 660, 670, 680, 690, 695, 697, 699
+- strict Results + Errors pattern
 
-No Population Tier exists.  
+- strict DTO + Validation pattern
 
-No Population Root exists.  
+- strict EventBus + LifecycleEngine integration
 
-No phases 261–400 exist.  
-
-No 100-layer population phases exist.  
-
-Only the phases defined above are valid.
-
-Cursor must scaffold AIMI phases only when explicitly instructed. Cursor must not create uncommitted Synthesis folders or Population folders.
-
-Awaiting next explicit phase instruction.
-
+Wait for Copilot to provide the next build prompt before generating anything.
