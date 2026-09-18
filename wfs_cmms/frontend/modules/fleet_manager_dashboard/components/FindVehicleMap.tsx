@@ -35,7 +35,7 @@ export function FindVehicleMap(props: { readonly filter: FleetManagerFilter }) {
             </a>
             <p style={accentStyle}>{point.source}</p>
             <p style={mutedStyle}>
-              {point.fault_code} {point.severity} {point.timestamp}
+              Find Vehicle {point.fault_code} {point.severity} {point.timestamp}
             </p>
           </article>
         ))}
