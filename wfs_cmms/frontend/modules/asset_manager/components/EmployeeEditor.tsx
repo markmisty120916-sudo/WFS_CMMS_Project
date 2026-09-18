@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import { useAssetManagerApi } from "../hooks/useAssetManagerApi";
+import { mutedStyle, panelStyle, rowStyle, titleStyle } from "../asset-manager.styles";
+import { Button, Input, Select } from "./ui/controls";
+
+function asRows(payload: unknown): readonly Readonly<Record<string, unknown>>[] {
+  if (payload === null || typeof payload !== "object") {
+    return [];
+  }
+  const value = (payload as { value?: unknown }).value;
+  if (Array.isArray(value) === false) {
+    return [];
+  }
+  return value as readonly Readonly<Record<string, unknown>>[];
+}
 
 export function EmployeeEditor() {
   const api = useAssetManagerApi();
@@ -10,26 +22,28 @@ export function EmployeeEditor() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("TECHNICIAN");
+  const [selected, setSelected] = useState("");
+
+  const reload = async () => {
+    setRows(asRows(await api.request("GET", "/asset-manager/employees", {})));
+  };
 
   useEffect(() => {
-    void (async () => {
-      const payload = (await api.request("GET", "/asset-manager/employees", {})) as { value?: readonly Readonly<Record<string, unknown>>[] } | null;
-      if (payload && payload.value) {
-        setRows(payload.value);
-      }
-    })();
-  }, [api]);
+    void reload();
+  }, [api.allowed]);
 
   if (api.allowed === false) {
     return null;
   }
 
+  const body = { name, email, role, status: "active" };
+
   return (
-    <section style={panelStyle}>
+    <section className="rounded-xl border border-violet-600 p-4" style={panelStyle}>
       <h2 style={titleStyle}>Employee Editor</h2>
-      <input style={inputStyle} value={name} onChange={(event) => setName(event.target.value)} placeholder="name" />
-      <input style={inputStyle} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email" />
-      <select style={inputStyle} value={role} onChange={(event) => setRole(event.target.value)}>
+      <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="name" />
+      <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email" />
+      <Select value={role} onChange={(event) => setRole(event.target.value)}>
         <option value="DRIVER">DRIVER</option>
         <option value="TECHNICIAN">TECHNICIAN</option>
         <option value="MASTER TECHNICIAN">MASTER TECHNICIAN</option>
@@ -38,21 +52,23 @@ export function EmployeeEditor() {
         <option value="COMPLIANCE OFFICER">COMPLIANCE OFFICER</option>
         <option value="ADMIN">ADMIN</option>
         <option value="SysAdmin">SysAdmin</option>
-      </select>
-      <button style={buttonStyle} type="button" onClick={() => void api.request("POST", "/asset-manager/employees", { name, email, role, status: "active" })}>
-        create
-      </button>
+      </Select>
+      <div style={rowStyle}>
+        <Button type="button" onClick={() => void api.request("POST", "/asset-manager/employees", body).then(reload)}>
+          create
+        </Button>
+        <Button type="button" onClick={() => void api.request("PUT", "/asset-manager/employees/" + selected, body).then(reload)}>
+          update
+        </Button>
+        <Button type="button" onClick={() => void api.request("DELETE", "/asset-manager/employees/" + selected, {}).then(reload)}>
+          delete
+        </Button>
+      </div>
       {rows.map((row) => (
-        <p key={String(row.user_id)} style={mutedStyle}>
+        <p key={String(row.user_id)} style={mutedStyle} onClick={() => setSelected(String(row.user_id))}>
           {String(row.name)} {String(row.role)}
         </p>
       ))}
     </section>
   );
 }
-
-const panelStyle: CSSProperties = { background: "#12081f", border: "1px solid #7c3aed", borderRadius: "12px", padding: "16px", color: "#f5f3ff" };
-const titleStyle: CSSProperties = { color: "#c084fc", textTransform: "uppercase" };
-const mutedStyle: CSSProperties = { color: "#c4b5fd" };
-const inputStyle: CSSProperties = { background: "#05010d", border: "1px solid #a855f7", color: "#f5f3ff", borderRadius: "8px", padding: "8px", width: "100%", marginBottom: "8px" };
-const buttonStyle: CSSProperties = { color: "#05010d", background: "#c084fc", border: "none", borderRadius: "8px", padding: "10px 16px", fontWeight: 700 };

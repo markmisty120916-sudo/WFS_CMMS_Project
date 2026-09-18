@@ -4,11 +4,13 @@ export function previewImport(record: AssetManagerImport): {
   readonly created: number;
   readonly updated: number;
   readonly rejected: number;
+  readonly warnings: number;
   readonly rows: readonly AssetManagerImportRow[];
 } {
   let created = 0;
   let updated = 0;
   let rejected = 0;
+  let warnings = 0;
   let index = 0;
   while (index < record.rows.length) {
     const action = record.rows[index].action;
@@ -17,6 +19,7 @@ export function previewImport(record: AssetManagerImport): {
     }
     if (action === "update") {
       updated = updated + 1;
+      warnings = warnings + 1;
     }
     if (action === "reject") {
       rejected = rejected + 1;
@@ -27,6 +30,7 @@ export function previewImport(record: AssetManagerImport): {
     created,
     updated,
     rejected,
+    warnings,
     rows: record.rows,
   });
 }

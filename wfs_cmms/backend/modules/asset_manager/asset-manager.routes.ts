@@ -24,10 +24,32 @@ function matchPath(pattern: string, pathname: string): Readonly<Record<string, s
   return params;
 }
 
+function queryFromUrl(url: string): Readonly<Record<string, string>> {
+  const queryIndex = url.indexOf("?");
+  if (queryIndex < 0) {
+    return {};
+  }
+  const query = url.slice(queryIndex + 1);
+  const pairs = query.split("&");
+  const params: Record<string, string> = {};
+  let index = 0;
+  while (index < pairs.length) {
+    const pair = pairs[index];
+    const eq = pair.indexOf("=");
+    if (eq > 0) {
+      params[decodeURIComponent(pair.slice(0, eq))] = decodeURIComponent(pair.slice(eq + 1));
+    }
+    index = index + 1;
+  }
+  return params;
+}
+
 export function createAssetManagerRouter(service: AssetManagerService) {
   const controller = createAssetManagerController(service);
   return async function assetManagerRouter(req: IncomingMessage, res: ServerResponse, dto: ContextDto): Promise<boolean> {
-    const url = req.url === undefined ? "" : req.url.split("?")[0];
+    const rawUrl = req.url === undefined ? "" : req.url;
+    const url = rawUrl.split("?")[0];
+    const query = queryFromUrl(rawUrl);
     const method = req.method === undefined ? "GET" : req.method;
     let index = 0;
     while (index < ASSET_MANAGER_API_ROUTES.length) {
@@ -35,7 +57,7 @@ export function createAssetManagerRouter(service: AssetManagerService) {
       if (route.method === method) {
         const params = matchPath(route.path, url);
         if (params !== null) {
-          await controller.handle(req, res, dto, route.operation, params);
+          await controller.handle(req, res, dto, route.operation, params, query);
           return true;
         }
       }

@@ -1,4 +1,4 @@
-export { canAccessAssetManagerUi } from "./asset-manager.rbac";
+export { canAccessAssetManagerUi, assetManagerTenantAllowed } from "./asset-manager.rbac";
 export { ASSET_MANAGER_EVENT_TYPES } from "./asset-manager.events";
 export { assetManagerRequest } from "./api/asset-manager.api.client";
 export { loadAssetManagerSession, useAssetManagerApi, useAssetManagerSession } from "./hooks/useAssetManagerApi";
@@ -7,6 +7,7 @@ export { AssetEditor } from "./components/AssetEditor";
 export { PartsEditor } from "./components/PartsEditor";
 export { EmployeeEditor } from "./components/EmployeeEditor";
 export { PmScheduleEditor } from "./components/PmScheduleEditor";
+export { VendorEditor } from "./components/VendorEditor";
 export { ConfigurationPackBuilder } from "./components/ConfigurationPackBuilder";
 export { ImportHistory } from "./components/ImportHistory";
 export { default as AssetManagerPage } from "./page";

@@ -78,6 +78,9 @@ export function isAssetManagerApiAllowed(operation: AssetManagerApiOperation, ro
   if (operation === "upsert_vendor") {
     return true;
   }
+  if (operation === "delete_vendor") {
+    return true;
+  }
   if (operation === "list_packs") {
     return true;
   }

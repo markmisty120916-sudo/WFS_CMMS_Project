@@ -23,7 +23,7 @@ function readBody(req: IncomingMessage): Promise<string> {
 
 export function createAssetManagerController(service: AssetManagerService) {
   return {
-    async handle(req: IncomingMessage, res: ServerResponse, dto: ContextDto, operation: string, params: Readonly<Record<string, string>>): Promise<void> {
+    async handle(req: IncomingMessage, res: ServerResponse, dto: ContextDto, operation: string, params: Readonly<Record<string, string>>, query: Readonly<Record<string, string>>): Promise<void> {
       const raw = await readBody(req);
       let parsed: Record<string, unknown> = {};
       if (raw !== "") {
@@ -78,7 +78,10 @@ export function createAssetManagerController(service: AssetManagerService) {
         return;
       }
       if (operation === "list_imports") {
-        const result = await service.listImports(dto, { status: asString("status"), data_type: asString("data_type") });
+        const result = await service.listImports(dto, {
+          status: query.status || asString("status"),
+          data_type: query.data_type || asString("data_type"),
+        });
         send(res, result.ok === true ? 200 : 400, result);
         return;
       }
@@ -255,6 +258,11 @@ export function createAssetManagerController(service: AssetManagerService) {
           i = i + 1;
         }
         const result = await service.upsertVendor(dto, body);
+        send(res, result.ok === true ? 200 : 400, result);
+        return;
+      }
+      if (operation === "delete_vendor") {
+        const result = await service.deleteVendor(dto, params.vendor_id || "");
         send(res, result.ok === true ? 200 : 400, result);
         return;
       }

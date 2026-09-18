@@ -134,3 +134,41 @@ export function validateImportRows(
   }
   return validated;
 }
+
+export function applyExistingDuplicateKeys(
+  rows: readonly AssetManagerImportRow[],
+  existing_keys: readonly string[],
+  key_field: string,
+): readonly AssetManagerImportRow[] {
+  const next: AssetManagerImportRow[] = [];
+  let index = 0;
+  while (index < rows.length) {
+    const row = rows[index];
+    if (row.action === "create") {
+      const key = (row.payload[key_field] || "").trim().toUpperCase();
+      let found = false;
+      let existingIndex = 0;
+      while (existingIndex < existing_keys.length) {
+        if (existing_keys[existingIndex] === key) {
+          found = true;
+        }
+        existingIndex = existingIndex + 1;
+      }
+      if (found === true && key !== "") {
+        next.push(
+          Object.freeze({
+            ...row,
+            action: "update",
+            reason: "duplicate " + key_field,
+          }),
+        );
+      } else {
+        next.push(row);
+      }
+    } else {
+      next.push(row);
+    }
+    index = index + 1;
+  }
+  return next;
+}

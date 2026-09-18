@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import { useAssetManagerApi } from "../hooks/useAssetManagerApi";
+import { mutedStyle, panelStyle, titleStyle } from "../asset-manager.styles";
+
+function asRows(payload: unknown): readonly Readonly<Record<string, unknown>>[] {
+  if (payload === null || typeof payload !== "object") {
+    return [];
+  }
+  const value = (payload as { value?: unknown }).value;
+  if (Array.isArray(value) === false) {
+    return [];
+  }
+  return value as readonly Readonly<Record<string, unknown>>[];
+}
 
 export function ImportHistory() {
   const api = useAssetManagerApi();
@@ -10,29 +21,22 @@ export function ImportHistory() {
 
   useEffect(() => {
     void (async () => {
-      const payload = (await api.request("GET", "/asset-manager/imports", {})) as { value?: readonly Readonly<Record<string, unknown>>[] } | null;
-      if (payload && payload.value) {
-        setRows(payload.value);
-      }
+      setRows(asRows(await api.request("GET", "/asset-manager/imports", {})));
     })();
-  }, [api]);
+  }, [api.allowed]);
 
   if (api.allowed === false) {
     return null;
   }
 
   return (
-    <section style={panelStyle}>
+    <section className="rounded-xl border border-violet-600 p-4" style={panelStyle}>
       <h2 style={titleStyle}>Import History</h2>
       {rows.map((row) => (
         <p key={String(row.import_id)} style={mutedStyle}>
-          {String(row.import_id)} {String(row.status)} {String(row.created_by)} {String(row.created_at)}
+          {String(row.status)} {String(row.data_type)} {String(row.created_by)} {String(row.created_at)} {String(row.audit_summary)}
         </p>
       ))}
     </section>
   );
 }
-
-const panelStyle: CSSProperties = { background: "#12081f", border: "1px solid #7c3aed", borderRadius: "12px", padding: "16px", color: "#f5f3ff" };
-const titleStyle: CSSProperties = { color: "#c084fc", textTransform: "uppercase" };
-const mutedStyle: CSSProperties = { color: "#c4b5fd" };

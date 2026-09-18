@@ -8,6 +8,7 @@ import { loadAssetManagerSession } from "./hooks/useAssetManagerApi";
 export default function AssetManagerLayout(props: { readonly children: ReactNode }) {
   const [allowed, setAllowed] = useState(false);
   const [ready, setReady] = useState(false);
+  const [tenant_id, setTenant] = useState("");
 
   useEffect(() => {
     const session = loadAssetManagerSession();
@@ -16,25 +17,32 @@ export default function AssetManagerLayout(props: { readonly children: ReactNode
       setReady(true);
       return;
     }
-    setAllowed(canAccessAssetManagerUi(session.role));
+    setTenant(session.tenant_id);
+    setAllowed(canAccessAssetManagerUi(session.role) && session.tenant_id !== "");
     setReady(true);
   }, []);
 
   if (ready === false) {
-    return <div style={shellStyle} />;
+    return <div className="min-h-screen bg-[#05010d]" style={shellStyle} />;
   }
 
   if (allowed === false) {
     return (
-      <div style={shellStyle}>
+      <div className="min-h-screen bg-[#05010d]" style={shellStyle}>
         <p style={deniedStyle}>role unauthorized</p>
       </div>
     );
   }
 
   return (
-    <div style={shellStyle}>
-      <main style={mainStyle}>{props.children}</main>
+    <div className="min-h-screen bg-[#05010d] text-[#f5f3ff]" style={shellStyle}>
+      <header style={barStyle}>
+        <p style={brandStyle}>Asset Manager</p>
+        <p style={tenantStyle}>tenant {tenant_id}</p>
+      </header>
+      <main className="p-4" style={mainStyle}>
+        {props.children}
+      </main>
     </div>
   );
 }
@@ -48,3 +56,18 @@ const deniedStyle: CSSProperties = {
   letterSpacing: "0.12em",
   textTransform: "uppercase",
 };
+const barStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  borderBottom: "1px solid #c084fc",
+  boxShadow: "0 0 24px #c084fc88",
+  padding: "16px",
+};
+const brandStyle: CSSProperties = {
+  color: "#c084fc",
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  fontWeight: 700,
+  margin: 0,
+};
+const tenantStyle: CSSProperties = { color: "#22d3ee", margin: 0 };

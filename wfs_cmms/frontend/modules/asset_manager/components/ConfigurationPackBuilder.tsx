@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
 import { useAssetManagerApi } from "../hooks/useAssetManagerApi";
+import { mutedStyle, panelStyle, titleStyle } from "../asset-manager.styles";
+import { Button, Input, Select } from "./ui/controls";
+
+function asRows(payload: unknown): readonly Readonly<Record<string, unknown>>[] {
+  if (payload === null || typeof payload !== "object") {
+    return [];
+  }
+  const value = (payload as { value?: unknown }).value;
+  if (Array.isArray(value) === false) {
+    return [];
+  }
+  return value as readonly Readonly<Record<string, unknown>>[];
+}
 
 export function ConfigurationPackBuilder() {
   const api = useAssetManagerApi();
@@ -11,67 +23,67 @@ export function ConfigurationPackBuilder() {
   const [interval_miles, setMiles] = useState("");
   const [interval_hours, setHours] = useState("");
   const [severity_default, setSeverity] = useState("S3");
+  const [workorder_source, setSource] = useState("pm");
+  const [telematics_fault_code, setFault] = useState("");
+  const [telematics_severity, setTelematicsSeverity] = useState("");
   const [packs, setPacks] = useState<readonly Readonly<Record<string, unknown>>[]>([]);
 
+  const reload = async () => {
+    setPacks(asRows(await api.request("GET", "/asset-manager/packs", {})));
+  };
+
   useEffect(() => {
-    void (async () => {
-      const payload = (await api.request("GET", "/asset-manager/packs", {})) as { value?: readonly Readonly<Record<string, unknown>>[] } | null;
-      if (payload && payload.value) {
-        setPacks(payload.value);
-      }
-    })();
-  }, [api]);
+    void reload();
+  }, [api.allowed]);
 
   if (api.allowed === false) {
     return null;
   }
 
   return (
-    <section style={panelStyle}>
+    <section className="rounded-xl border border-violet-600 p-4" style={panelStyle}>
       <h2 style={titleStyle}>Configuration Pack Builder</h2>
-      <input style={inputStyle} value={name} onChange={(event) => setName(event.target.value)} placeholder="name" />
-      <input style={inputStyle} value={pm_template_name} onChange={(event) => setTemplate(event.target.value)} placeholder="pm_template_name" />
-      <input style={inputStyle} value={interval_miles} onChange={(event) => setMiles(event.target.value)} placeholder="interval_miles" />
-      <input style={inputStyle} value={interval_hours} onChange={(event) => setHours(event.target.value)} placeholder="interval_hours" />
-      <select style={inputStyle} value={severity_default} onChange={(event) => setSeverity(event.target.value)}>
+      <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="name" />
+      <Input value={pm_template_name} onChange={(event) => setTemplate(event.target.value)} placeholder="pm_template_name" />
+      <Input value={interval_miles} onChange={(event) => setMiles(event.target.value)} placeholder="interval_miles" />
+      <Input value={interval_hours} onChange={(event) => setHours(event.target.value)} placeholder="interval_hours" />
+      <Select value={severity_default} onChange={(event) => setSeverity(event.target.value)}>
         <option value="S1">S1</option>
         <option value="S2">S2</option>
         <option value="S3">S3</option>
         <option value="S4">S4</option>
         <option value="S5">S5</option>
-      </select>
-      <button
-        style={buttonStyle}
+      </Select>
+      <Input value={workorder_source} onChange={(event) => setSource(event.target.value)} placeholder="workorder_source" />
+      <Input value={telematics_fault_code} onChange={(event) => setFault(event.target.value)} placeholder="telematics_fault_code" />
+      <Input value={telematics_severity} onChange={(event) => setTelematicsSeverity(event.target.value)} placeholder="telematics_severity" />
+      <Button
         type="button"
         onClick={() =>
-          void api.request("POST", "/asset-manager/packs", {
-            name,
-            pm_template_name,
-            interval_miles,
-            interval_hours,
-            severity_default,
-            workorder_source: "pm",
-            telematics_fault_code: "",
-            telematics_severity: "",
-          })
+          void api
+            .request("POST", "/asset-manager/packs", {
+              name,
+              pm_template_name,
+              interval_miles,
+              interval_hours,
+              severity_default,
+              workorder_source,
+              telematics_fault_code,
+              telematics_severity,
+            })
+            .then(reload)
         }
       >
         create pack
-      </button>
+      </Button>
       {packs.map((pack) => (
         <p key={String(pack.pack_id)} style={mutedStyle}>
-          {String(pack.name)}
-          <button style={buttonStyle} type="button" onClick={() => void api.request("POST", "/asset-manager/packs/" + String(pack.pack_id) + "/apply", {})}>
+          {String(pack.name)} {String(pack.severity_default)}
+          <Button type="button" onClick={() => void api.request("POST", "/asset-manager/packs/" + String(pack.pack_id) + "/apply", {})}>
             apply
-          </button>
+          </Button>
         </p>
       ))}
     </section>
   );
 }
-
-const panelStyle: CSSProperties = { background: "#12081f", border: "1px solid #7c3aed", borderRadius: "12px", padding: "16px", color: "#f5f3ff" };
-const titleStyle: CSSProperties = { color: "#c084fc", textTransform: "uppercase" };
-const mutedStyle: CSSProperties = { color: "#c4b5fd" };
-const inputStyle: CSSProperties = { background: "#05010d", border: "1px solid #a855f7", color: "#f5f3ff", borderRadius: "8px", padding: "8px", width: "100%", marginBottom: "8px" };
-const buttonStyle: CSSProperties = { color: "#05010d", background: "#c084fc", border: "none", borderRadius: "8px", padding: "8px 12px", fontWeight: 700, marginLeft: "8px" };

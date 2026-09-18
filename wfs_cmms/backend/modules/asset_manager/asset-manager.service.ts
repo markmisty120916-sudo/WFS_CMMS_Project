@@ -16,15 +16,28 @@ import { assetManagerWriteError, isVinFormat, mapAuthorizedEmployeeRole } from "
 import type {
   AssetManagerColumnMap,
   AssetManagerConfigPack,
+  AssetManagerDataType,
   AssetManagerImport,
   AssetManagerListQuery,
   AssetManagerUploadInput,
   AssetManagerVendorRecord,
 } from "./asset-manager.interface";
+import {
+  listExistingKeys,
+  listImports as listStoredImports,
+  listPacks as listStoredPacks,
+  listVendors as listStoredVendors,
+  loadImport,
+  loadPack,
+  saveImport,
+  savePack,
+  saveVendor,
+  softDeleteVendor,
+} from "./asset-manager.repository";
 import { commitImportRows } from "./engines/bulk-commit.engine";
 import { previewImport } from "./engines/bulk-preview.engine";
 import { applyColumnMap, defaultColumnMap, parseUploadRows } from "./engines/bulk-upload.engine";
-import { validateImportRows } from "./engines/bulk-validation.engine";
+import { applyExistingDuplicateKeys, validateImportRows } from "./engines/bulk-validation.engine";
 
 export type AssetManagerServiceOptions = {
   tenant_id: string;
@@ -55,9 +68,6 @@ export class AssetManagerService {
   private readonly database: Database;
   private readonly eventBus: EventBusService;
   private readonly auditLogHook: AuditLogHook;
-  private readonly imports: Map<string, AssetManagerImport>;
-  private readonly packs: Map<string, AssetManagerConfigPack>;
-  private readonly vendors: Map<string, AssetManagerVendorRecord>;
 
   constructor(options: AssetManagerServiceOptions) {
     this.tenant_id = options.tenant_id;
@@ -65,9 +75,6 @@ export class AssetManagerService {
     this.database = options.database;
     this.eventBus = options.eventBus;
     this.auditLogHook = options.auditLogHook;
-    this.imports = new Map();
-    this.packs = new Map();
-    this.vendors = new Map();
   }
 
   private fail(error_type: ErrorType, dto: ContextDto): Result<never> {
@@ -96,8 +103,30 @@ export class AssetManagerService {
     return null;
   }
 
-  private importKey(import_id: string): string {
-    return this.tenant_id + ":" + import_id;
+  private async duplicateKeys(data_type: AssetManagerDataType): Promise<readonly string[]> {
+    if (data_type === "vehicles") {
+      return listExistingKeys(this.database, this.tenant_id, "SELECT vin FROM Assets WHERE tenant_id = $1 AND deleted_at IS NULL", "vin");
+    }
+    if (data_type === "parts") {
+      return listExistingKeys(this.database, this.tenant_id, "SELECT name FROM Parts WHERE tenant_id = $1 AND deleted_at IS NULL", "name");
+    }
+    if (data_type === "employees") {
+      return listExistingKeys(this.database, this.tenant_id, "SELECT email FROM Users WHERE tenant_id = $1 AND deleted_at IS NULL", "email");
+    }
+    return [];
+  }
+
+  private duplicateField(data_type: AssetManagerDataType): string {
+    if (data_type === "vehicles") {
+      return "vin";
+    }
+    if (data_type === "parts") {
+      return "name";
+    }
+    if (data_type === "employees") {
+      return "email";
+    }
+    return "";
   }
 
   async upload(dto: ContextDto, input: AssetManagerUploadInput): Promise<Result<AssetManagerImport>> {
@@ -117,9 +146,10 @@ export class AssetManagerService {
       created_by: dto.user_id,
       created_at: dto.timestamp,
       updated_at: dto.timestamp,
+      audit_summary: "uploaded",
       rows: mapped,
     });
-    this.imports.set(this.importKey(import_id), record);
+    await saveImport(this.database, record);
     this.logger.info("uploaded");
     return ok(record, resultContextFromDto(dto));
   }
@@ -129,8 +159,8 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const current = this.imports.get(this.importKey(import_id));
-    if (current === undefined) {
+    const current = await loadImport(this.database, dto.tenant_id, import_id);
+    if (current === null) {
       return this.fail("entity_id required", dto);
     }
     if (current.tenant_id !== dto.tenant_id) {
@@ -143,14 +173,20 @@ export class AssetManagerService {
       remapped.push(applyColumnMap(current.rows[index].payload, map));
       index = index + 1;
     }
-    const rows = validateImportRows(dto.tenant_id, current.data_type, remapped);
+    let rows = validateImportRows(dto.tenant_id, current.data_type, remapped);
+    const field = this.duplicateField(current.data_type);
+    if (field !== "") {
+      const existing = await this.duplicateKeys(current.data_type);
+      rows = applyExistingDuplicateKeys(rows, existing, field);
+    }
     const next: AssetManagerImport = Object.freeze({
       ...current,
       status: "validated",
       updated_at: dto.timestamp,
+      audit_summary: "aimi validated",
       rows,
     });
-    this.imports.set(this.importKey(import_id), next);
+    await saveImport(this.database, next);
     return ok(next, resultContextFromDto(dto));
   }
 
@@ -159,17 +195,26 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const current = this.imports.get(this.importKey(import_id));
-    if (current === undefined) {
+    const current = await loadImport(this.database, dto.tenant_id, import_id);
+    if (current === null) {
       return this.fail("entity_id required", dto);
     }
-    previewImport(current);
+    const summary = previewImport(current);
     const next: AssetManagerImport = Object.freeze({
       ...current,
       status: "previewed",
       updated_at: dto.timestamp,
+      audit_summary:
+        "create " +
+        String(summary.created) +
+        " update " +
+        String(summary.updated) +
+        " reject " +
+        String(summary.rejected) +
+        " warnings " +
+        String(summary.warnings),
     });
-    this.imports.set(this.importKey(import_id), next);
+    await saveImport(this.database, next);
     return ok(next, resultContextFromDto(dto));
   }
 
@@ -178,8 +223,8 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const current = this.imports.get(this.importKey(import_id));
-    if (current === undefined) {
+    const current = await loadImport(this.database, dto.tenant_id, import_id);
+    if (current === null) {
       return this.fail("entity_id required", dto);
     }
     const result = await commitImportRows(this.database, dto, current);
@@ -188,8 +233,9 @@ export class AssetManagerService {
       ...current,
       status: failed === true ? "failed" : "completed",
       updated_at: dto.timestamp,
+      audit_summary: result.reason,
     });
-    this.imports.set(this.importKey(import_id), next);
+    await saveImport(this.database, next);
     const incoming = incomingEventFromImport(dto, next, failed);
     if (failed === true) {
       await this.audit(dto, "bulk_import.failed", import_id, result.reason);
@@ -206,21 +252,7 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const items: AssetManagerImport[] = [];
-    this.imports.forEach((record) => {
-      if (record.tenant_id === dto.tenant_id) {
-        let include = true;
-        if (query.status !== "" && record.status !== query.status) {
-          include = false;
-        }
-        if (query.data_type !== "" && record.data_type !== query.data_type) {
-          include = false;
-        }
-        if (include === true) {
-          items.push(record);
-        }
-      }
-    });
+    const items = await listStoredImports(this.database, dto.tenant_id, query.status, query.data_type);
     return ok(items, resultContextFromDto(dto));
   }
 
@@ -229,8 +261,8 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const current = this.imports.get(this.importKey(import_id));
-    if (current === undefined) {
+    const current = await loadImport(this.database, dto.tenant_id, import_id);
+    if (current === null) {
       return this.fail("entity_id required", dto);
     }
     if (current.tenant_id !== dto.tenant_id) {
@@ -246,7 +278,7 @@ export class AssetManagerService {
     }
     const result = await this.database.execute(
       createPreparedStatement(
-        "SELECT asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, created_at, updated_at, deleted_at FROM Assets WHERE tenant_id = $1 AND deleted_at IS NULL",
+        "SELECT asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, telematics_id, vendor_id, created_at, updated_at, deleted_at FROM Assets WHERE tenant_id = $1 AND deleted_at IS NULL",
         [dto.tenant_id],
       ),
     );
@@ -264,8 +296,22 @@ export class AssetManagerService {
     }
     await this.database.execute(
       createPreparedStatement(
-        "INSERT INTO Assets (asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11, NULL)",
-        [dto.tenant_id, asset_id, (body.vin || "").toUpperCase(), body.unit_number || "", body.make || "", body.model || "", body.year || "", body.mileage || "", body.hours || "", body.status || "", dto.timestamp],
+        "INSERT INTO Assets (asset_id, tenant_id, vin, unit_number, make, model, year, mileage, hours, status, telematics_id, vendor_id, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13, NULL)",
+        [
+          dto.tenant_id,
+          asset_id,
+          (body.vin || "").toUpperCase(),
+          body.unit_number || "",
+          body.make || "",
+          body.model || "",
+          body.year || "",
+          body.mileage || "",
+          body.hours || "",
+          body.status || "",
+          body.telematics_id || "",
+          body.vendor_id || "",
+          dto.timestamp,
+        ],
       ),
     );
     await this.eventBus.publish(incomingEventFromAssetManager(dto, "asset.created", asset_id, { asset_id }));
@@ -280,8 +326,22 @@ export class AssetManagerService {
     }
     await this.database.execute(
       createPreparedStatement(
-        "UPDATE Assets SET vin = $3, unit_number = $4, make = $5, model = $6, year = $7, mileage = $8, hours = $9, status = $10, updated_at = $11 WHERE tenant_id = $1 AND asset_id = $2 AND deleted_at IS NULL",
-        [dto.tenant_id, asset_id, (body.vin || "").toUpperCase(), body.unit_number || "", body.make || "", body.model || "", body.year || "", body.mileage || "", body.hours || "", body.status || "", dto.timestamp],
+        "UPDATE Assets SET vin = $3, unit_number = $4, make = $5, model = $6, year = $7, mileage = $8, hours = $9, status = $10, telematics_id = $11, vendor_id = $12, updated_at = $13 WHERE tenant_id = $1 AND asset_id = $2 AND deleted_at IS NULL",
+        [
+          dto.tenant_id,
+          asset_id,
+          (body.vin || "").toUpperCase(),
+          body.unit_number || "",
+          body.make || "",
+          body.model || "",
+          body.year || "",
+          body.mileage || "",
+          body.hours || "",
+          body.status || "",
+          body.telematics_id || "",
+          body.vendor_id || "",
+          dto.timestamp,
+        ],
       ),
     );
     await this.eventBus.publish(incomingEventFromAssetManager(dto, "asset.updated", asset_id, { asset_id }));
@@ -312,7 +372,7 @@ export class AssetManagerService {
     }
     const result = await this.database.execute(
       createPreparedStatement(
-        "SELECT part_id, tenant_id, name, description, quantity, location, created_at, updated_at, deleted_at FROM Parts WHERE tenant_id = $1 AND deleted_at IS NULL",
+        "SELECT part_id, tenant_id, name, description, quantity, location, reorder_point, vendor_id, created_at, updated_at, deleted_at FROM Parts WHERE tenant_id = $1 AND deleted_at IS NULL",
         [dto.tenant_id],
       ),
     );
@@ -327,8 +387,18 @@ export class AssetManagerService {
     const part_id = body.part_id || dto.entity_id;
     await this.database.execute(
       createPreparedStatement(
-        "INSERT INTO Parts (part_id, tenant_id, name, description, quantity, location, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $7, NULL)",
-        [dto.tenant_id, part_id, body.name || "", body.description || "", body.quantity || "", body.location || "", dto.timestamp],
+        "INSERT INTO Parts (part_id, tenant_id, name, description, quantity, location, reorder_point, vendor_id, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $8, $9, $9, NULL)",
+        [
+          dto.tenant_id,
+          part_id,
+          body.name || "",
+          body.description || "",
+          body.quantity || "",
+          body.location || "",
+          body.reorder_point || "",
+          body.vendor_id || "",
+          dto.timestamp,
+        ],
       ),
     );
     return ok(null, resultContextFromDto(dto));
@@ -341,8 +411,18 @@ export class AssetManagerService {
     }
     await this.database.execute(
       createPreparedStatement(
-        "UPDATE Parts SET name = $3, description = $4, quantity = $5, location = $6, updated_at = $7 WHERE tenant_id = $1 AND part_id = $2 AND deleted_at IS NULL",
-        [dto.tenant_id, part_id, body.name || "", body.description || "", body.quantity || "", body.location || "", dto.timestamp],
+        "UPDATE Parts SET name = $3, description = $4, quantity = $5, location = $6, reorder_point = $7, vendor_id = $8, updated_at = $9 WHERE tenant_id = $1 AND part_id = $2 AND deleted_at IS NULL",
+        [
+          dto.tenant_id,
+          part_id,
+          body.name || "",
+          body.description || "",
+          body.quantity || "",
+          body.location || "",
+          body.reorder_point || "",
+          body.vendor_id || "",
+          dto.timestamp,
+        ],
       ),
     );
     return ok(null, resultContextFromDto(dto));
@@ -434,7 +514,7 @@ export class AssetManagerService {
     }
     const result = await this.database.execute(
       createPreparedStatement(
-        "SELECT pm_schedule_id, tenant_id, asset_id, pm_template_id, due_miles, due_hours, status, created_at, updated_at, deleted_at FROM PMSchedule WHERE tenant_id = $1 AND deleted_at IS NULL",
+        "SELECT pm_schedule_id, tenant_id, asset_id, pm_template_id, due_miles, due_hours, status, asset_group, created_at, updated_at, deleted_at FROM PMSchedule WHERE tenant_id = $1 AND deleted_at IS NULL",
         [dto.tenant_id],
       ),
     );
@@ -449,15 +529,15 @@ export class AssetManagerService {
     const template_id = body.pm_template_id || body.name || dto.entity_id;
     await this.database.execute(
       createPreparedStatement(
-        "INSERT INTO PMTemplates (pm_template_id, tenant_id, name, interval_miles, interval_hours, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $6, NULL)",
-        [dto.tenant_id, template_id, body.name || "", body.interval_miles || "", body.interval_hours || "", dto.timestamp],
+        "INSERT INTO PMTemplates (pm_template_id, tenant_id, name, interval_miles, interval_hours, asset_group, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $7, NULL)",
+        [dto.tenant_id, template_id, body.name || "", body.interval_miles || "", body.interval_hours || "", body.asset_group || "", dto.timestamp],
       ),
     );
     const schedule_id = body.pm_schedule_id || template_id;
     await this.database.execute(
       createPreparedStatement(
-        "INSERT INTO PMSchedule (pm_schedule_id, tenant_id, asset_id, pm_template_id, due_miles, due_hours, status, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $8, $8, NULL)",
-        [dto.tenant_id, schedule_id, body.asset_id || "", template_id, body.due_miles || "", body.due_hours || "", body.status || "", dto.timestamp],
+        "INSERT INTO PMSchedule (pm_schedule_id, tenant_id, asset_id, pm_template_id, due_miles, due_hours, status, asset_group, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $8, $9, $9, NULL)",
+        [dto.tenant_id, schedule_id, body.asset_id || "", template_id, body.due_miles || "", body.due_hours || "", body.status || "", body.asset_group || "", dto.timestamp],
       ),
     );
     return ok(null, resultContextFromDto(dto));
@@ -470,8 +550,8 @@ export class AssetManagerService {
     }
     await this.database.execute(
       createPreparedStatement(
-        "UPDATE PMSchedule SET asset_id = $3, pm_template_id = $4, due_miles = $5, due_hours = $6, status = $7, updated_at = $8 WHERE tenant_id = $1 AND pm_schedule_id = $2 AND deleted_at IS NULL",
-        [dto.tenant_id, pm_schedule_id, body.asset_id || "", body.pm_template_id || "", body.due_miles || "", body.due_hours || "", body.status || "", dto.timestamp],
+        "UPDATE PMSchedule SET asset_id = $3, pm_template_id = $4, due_miles = $5, due_hours = $6, status = $7, asset_group = $8, updated_at = $9 WHERE tenant_id = $1 AND pm_schedule_id = $2 AND deleted_at IS NULL",
+        [dto.tenant_id, pm_schedule_id, body.asset_id || "", body.pm_template_id || "", body.due_miles || "", body.due_hours || "", body.status || "", body.asset_group || "", dto.timestamp],
       ),
     );
     return ok(null, resultContextFromDto(dto));
@@ -496,12 +576,7 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const items: AssetManagerVendorRecord[] = [];
-    this.vendors.forEach((vendor) => {
-      if (vendor.tenant_id === dto.tenant_id) {
-        items.push(vendor);
-      }
-    });
+    const items = await listStoredVendors(this.database, dto.tenant_id);
     return ok(items, resultContextFromDto(dto));
   }
 
@@ -516,11 +591,24 @@ export class AssetManagerService {
     }
     const vendor: AssetManagerVendorRecord = Object.freeze({
       tenant_id: dto.tenant_id,
+      vendor_id: body.vendor_id || vendor_name,
       vendor_name,
       location: body.location || "",
+      created_at: dto.timestamp,
+      updated_at: dto.timestamp,
+      deleted_at: null,
     });
-    this.vendors.set(this.tenant_id + ":" + vendor_name, vendor);
+    await saveVendor(this.database, vendor);
     return ok(vendor, resultContextFromDto(dto));
+  }
+
+  async deleteVendor(dto: ContextDto, vendor_id: string): Promise<Result<null>> {
+    const blocked = this.guard(dto, "delete_vendor");
+    if (blocked !== null) {
+      return blocked;
+    }
+    await softDeleteVendor(this.database, dto.tenant_id, vendor_id, dto.timestamp);
+    return ok(null, resultContextFromDto(dto));
   }
 
   async applyPack(dto: ContextDto, pack_id: string): Promise<Result<AssetManagerConfigPack | null>> {
@@ -528,14 +616,14 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const pack = this.packs.get(this.tenant_id + ":" + pack_id);
-    if (pack === undefined) {
+    const pack = await loadPack(this.database, dto.tenant_id, pack_id);
+    if (pack === null) {
       return this.fail("entity_id required", dto);
     }
     await this.database.execute(
       createPreparedStatement(
-        "INSERT INTO PMTemplates (pm_template_id, tenant_id, name, interval_miles, interval_hours, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $6, NULL)",
-        [dto.tenant_id, pack.pack_id, pack.pm_template_name, pack.interval_miles, pack.interval_hours, dto.timestamp],
+        "INSERT INTO PMTemplates (pm_template_id, tenant_id, name, interval_miles, interval_hours, asset_group, created_at, updated_at, deleted_at) VALUES ($2, $1, $3, $4, $5, $6, $7, $7, NULL)",
+        [dto.tenant_id, pack.pack_id, pack.pm_template_name, pack.interval_miles, pack.interval_hours, "", dto.timestamp],
       ),
     );
     await this.eventBus.publish(incomingEventFromAssetManager(dto, "configuration_pack.applied", pack_id, { pack_id }));
@@ -564,7 +652,7 @@ export class AssetManagerService {
       updated_at: dto.timestamp,
       deleted_at: null,
     });
-    this.packs.set(this.tenant_id + ":" + pack_id, pack);
+    await savePack(this.database, pack);
     return ok(pack, resultContextFromDto(dto));
   }
 
@@ -573,16 +661,16 @@ export class AssetManagerService {
     if (blocked !== null) {
       return blocked;
     }
-    const items: AssetManagerConfigPack[] = [];
-    this.packs.forEach((pack) => {
-      if (pack.tenant_id === dto.tenant_id) {
-        items.push(pack);
-      }
-    });
+    const items = await listStoredPacks(this.database, dto.tenant_id);
     return ok(items, resultContextFromDto(dto));
   }
 
-  private async audit(dto: ContextDto, action: "asset.created" | "asset.updated" | "asset.deleted" | "bulk_import.completed" | "bulk_import.failed" | "configuration_pack.applied", entity_id: string, message: string): Promise<void> {
+  private async audit(
+    dto: ContextDto,
+    action: "asset.created" | "asset.updated" | "asset.deleted" | "bulk_import.completed" | "bulk_import.failed" | "configuration_pack.applied",
+    entity_id: string,
+    message: string,
+  ): Promise<void> {
     const log_id = assetManagerAuditLogId(entity_id, action, dto.timestamp);
     await this.database.execute(
       createPreparedStatement(

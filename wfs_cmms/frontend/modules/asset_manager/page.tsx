@@ -8,15 +8,17 @@ import { EmployeeEditor } from "./components/EmployeeEditor";
 import { ImportHistory } from "./components/ImportHistory";
 import { PartsEditor } from "./components/PartsEditor";
 import { PmScheduleEditor } from "./components/PmScheduleEditor";
+import { VendorEditor } from "./components/VendorEditor";
 
 export default function AssetManagerPage() {
   return (
-    <div style={gridStyle}>
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2" style={gridStyle}>
       <BulkUploadWizard />
       <AssetEditor />
       <PartsEditor />
       <EmployeeEditor />
       <PmScheduleEditor />
+      <VendorEditor />
       <ConfigurationPackBuilder />
       <ImportHistory />
     </div>

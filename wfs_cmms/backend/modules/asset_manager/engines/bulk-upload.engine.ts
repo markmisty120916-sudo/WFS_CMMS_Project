@@ -1,18 +1,18 @@
 import type { AssetManagerColumnMap, AssetManagerDataType, AssetManagerFileFormat } from "../asset-manager.interface";
 
-export function parseDelimitedRows(content: string): readonly Readonly<Record<string, string>>[] {
+export function parseDelimitedRows(content: string, delimiter: string): readonly Readonly<Record<string, string>>[] {
   const lines = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const headerLine = lines.length > 0 ? lines[0] : "";
   if (headerLine.trim() === "") {
     return [];
   }
-  const headers = headerLine.split(",");
+  const headers = headerLine.split(delimiter);
   const rows: Readonly<Record<string, string>>[] = [];
   let lineIndex = 1;
   while (lineIndex < lines.length) {
     const line = lines[lineIndex];
     if (line.trim() !== "") {
-      const values = line.split(",");
+        const values = line.split(delimiter);
       const record: Record<string, string> = {};
       let col = 0;
       while (col < headers.length) {
@@ -63,7 +63,10 @@ export function parseUploadRows(file_format: AssetManagerFileFormat, content: st
   if (file_format === "json") {
     return parseJsonRows(content);
   }
-  return parseDelimitedRows(content);
+  if (file_format === "xlsx") {
+    return parseDelimitedRows(content, "\t");
+  }
+  return parseDelimitedRows(content, ",");
 }
 
 export function applyColumnMap(
@@ -100,6 +103,7 @@ export function defaultColumnMap(data_type: AssetManagerDataType): readonly Asse
       Object.freeze({ source_column: "hours", target_field: "hours" }),
       Object.freeze({ source_column: "status", target_field: "status" }),
       Object.freeze({ source_column: "telematics_id", target_field: "telematics_id" }),
+      Object.freeze({ source_column: "vendor_id", target_field: "vendor_id" }),
     ]);
   }
   if (data_type === "parts") {
@@ -108,6 +112,8 @@ export function defaultColumnMap(data_type: AssetManagerDataType): readonly Asse
       Object.freeze({ source_column: "description", target_field: "description" }),
       Object.freeze({ source_column: "quantity", target_field: "quantity" }),
       Object.freeze({ source_column: "location", target_field: "location" }),
+      Object.freeze({ source_column: "reorder_point", target_field: "reorder_point" }),
+      Object.freeze({ source_column: "vendor_id", target_field: "vendor_id" }),
     ]);
   }
   if (data_type === "employees") {
@@ -126,6 +132,7 @@ export function defaultColumnMap(data_type: AssetManagerDataType): readonly Asse
       Object.freeze({ source_column: "interval_hours", target_field: "interval_hours" }),
       Object.freeze({ source_column: "due_miles", target_field: "due_miles" }),
       Object.freeze({ source_column: "due_hours", target_field: "due_hours" }),
+      Object.freeze({ source_column: "asset_group", target_field: "asset_group" }),
     ]);
   }
   if (data_type === "vendors") {

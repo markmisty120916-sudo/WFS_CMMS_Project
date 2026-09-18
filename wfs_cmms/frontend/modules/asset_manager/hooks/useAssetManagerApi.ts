@@ -84,6 +84,12 @@ export function useAssetManagerApi() {
       if (allowed === false) {
         return null;
       }
+      if (session === null) {
+        return null;
+      }
+      if (session.tenant_id === "") {
+        return null;
+      }
       return assetManagerRequest(session, method, path, body);
     },
     [allowed, session],

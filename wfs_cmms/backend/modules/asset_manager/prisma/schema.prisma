@@ -8,31 +8,39 @@ datasource db {
 }
 
 model Assets {
-  asset_id    String  @id
-  tenant_id   String
-  vin         String
-  unit_number String
-  make        String
-  model       String
-  year        String
-  mileage     String
-  hours       String
-  status      String
-  created_at  String
-  updated_at  String
-  deleted_at  String?
+  asset_id      String  @id
+  tenant_id     String
+  vin           String
+  unit_number   String
+  make          String
+  model         String
+  year          String
+  mileage       String
+  hours         String
+  status        String
+  telematics_id String
+  vendor_id     String
+  created_at    String
+  updated_at    String
+  deleted_at    String?
+
+  @@index([tenant_id])
 }
 
 model Parts {
-  part_id     String  @id
-  tenant_id   String
-  name        String
-  description String
-  quantity    String
-  location    String
-  created_at  String
-  updated_at  String
-  deleted_at  String?
+  part_id       String  @id
+  tenant_id     String
+  name          String
+  description   String
+  quantity      String
+  location      String
+  reorder_point String
+  vendor_id     String
+  created_at    String
+  updated_at    String
+  deleted_at    String?
+
+  @@index([tenant_id])
 }
 
 model Users {
@@ -45,6 +53,8 @@ model Users {
   created_at String
   updated_at String
   deleted_at String?
+
+  @@index([tenant_id])
 }
 
 model PMTemplates {
@@ -53,9 +63,12 @@ model PMTemplates {
   name           String
   interval_miles String
   interval_hours String
+  asset_group    String
   created_at     String
   updated_at     String
   deleted_at     String?
+
+  @@index([tenant_id])
 }
 
 model PMSchedule {
@@ -66,9 +79,58 @@ model PMSchedule {
   due_miles      String
   due_hours      String
   status         String
+  asset_group    String
   created_at     String
   updated_at     String
   deleted_at     String?
+
+  @@index([tenant_id])
+}
+
+model Vendors {
+  vendor_id   String  @id
+  tenant_id   String
+  vendor_name String
+  location    String
+  created_at  String
+  updated_at  String
+  deleted_at  String?
+
+  @@index([tenant_id])
+}
+
+model ConfigurationPacks {
+  pack_id               String  @id
+  tenant_id             String
+  name                  String
+  pm_template_name      String
+  interval_miles        String
+  interval_hours        String
+  severity_default      String
+  workorder_source      String
+  telematics_fault_code String
+  telematics_severity   String
+  created_at            String
+  updated_at            String
+  deleted_at            String?
+
+  @@index([tenant_id])
+}
+
+model ImportHistory {
+  import_id     String  @id
+  tenant_id     String
+  data_type     String
+  file_format   String
+  status        String
+  created_by    String
+  audit_summary String
+  row_payload   String
+  created_at    String
+  updated_at    String
+  deleted_at    String?
+
+  @@index([tenant_id])
 }
 
 model IntegrationLogs {
@@ -79,4 +141,6 @@ model IntegrationLogs {
   created_at String
   updated_at String
   deleted_at String?
+
+  @@index([tenant_id])
 }

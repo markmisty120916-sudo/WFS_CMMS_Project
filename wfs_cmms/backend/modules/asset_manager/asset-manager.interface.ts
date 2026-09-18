@@ -31,6 +31,7 @@ export type AssetManagerAssetRecord = {
   readonly hours: string;
   readonly status: string;
   readonly telematics_id: string;
+  readonly vendor_id: string;
   readonly created_at: string;
   readonly updated_at: string;
   readonly deleted_at: string | null;
@@ -43,6 +44,8 @@ export type AssetManagerPartRecord = {
   readonly description: string;
   readonly quantity: string;
   readonly location: string;
+  readonly reorder_point: string;
+  readonly vendor_id: string;
   readonly created_at: string;
   readonly updated_at: string;
   readonly deleted_at: string | null;
@@ -71,6 +74,7 @@ export type AssetManagerPmRecord = {
   readonly due_miles: string;
   readonly due_hours: string;
   readonly status: string;
+  readonly asset_group: string;
   readonly created_at: string;
   readonly updated_at: string;
   readonly deleted_at: string | null;
@@ -78,8 +82,12 @@ export type AssetManagerPmRecord = {
 
 export type AssetManagerVendorRecord = {
   readonly tenant_id: string;
+  readonly vendor_id: string;
   readonly vendor_name: string;
   readonly location: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+  readonly deleted_at: string | null;
 };
 
 export type AssetManagerConfigPack = {
@@ -116,6 +124,7 @@ export type AssetManagerImport = {
   readonly created_by: string;
   readonly created_at: string;
   readonly updated_at: string;
+  readonly audit_summary: string;
   readonly rows: readonly AssetManagerImportRow[];
 };
 

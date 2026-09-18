@@ -33,6 +33,7 @@ export type AssetManagerApiOperation =
   | "delete_pm"
   | "list_vendors"
   | "upsert_vendor"
+  | "delete_vendor"
   | "list_packs"
   | "create_pack"
   | "apply_pack";
@@ -68,6 +69,7 @@ export const ASSET_MANAGER_API_ROUTES: readonly AssetManagerApiRoute[] = Object.
   Object.freeze({ method: "DELETE" as const, path: "/asset-manager/pm/{pm_schedule_id}", operation: "delete_pm" as const }),
   Object.freeze({ method: "GET" as const, path: "/asset-manager/vendors", operation: "list_vendors" as const }),
   Object.freeze({ method: "POST" as const, path: "/asset-manager/vendors", operation: "upsert_vendor" as const }),
+  Object.freeze({ method: "DELETE" as const, path: "/asset-manager/vendors/{vendor_id}", operation: "delete_vendor" as const }),
   Object.freeze({ method: "GET" as const, path: "/asset-manager/packs", operation: "list_packs" as const }),
   Object.freeze({ method: "POST" as const, path: "/asset-manager/packs", operation: "create_pack" as const }),
   Object.freeze({ method: "POST" as const, path: "/asset-manager/packs/{pack_id}/apply", operation: "apply_pack" as const }),

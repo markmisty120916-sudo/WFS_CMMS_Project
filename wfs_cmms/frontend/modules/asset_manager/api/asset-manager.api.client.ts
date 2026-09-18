@@ -29,11 +29,27 @@ export async function assetManagerRequest(
   headers[ASSET_MANAGER_API_HEADERS.authorization] = "Bearer " + session.token;
   headers[ASSET_MANAGER_API_HEADERS.tenant] = session.tenant_id;
   headers[ASSET_MANAGER_API_HEADERS.content_type] = "application/json";
+  let url = ASSET_MANAGER_API_BASE + path;
   const init: RequestInit = { method, headers };
-  if (method !== "GET") {
+  if (method === "GET" && body !== null && typeof body === "object" && Array.isArray(body) === false) {
+    const query = body as Record<string, unknown>;
+    const keys = Object.keys(query);
+    const pairs: string[] = [];
+    let index = 0;
+    while (index < keys.length) {
+      const value = query[keys[index]];
+      if (typeof value === "string" && value !== "") {
+        pairs.push(encodeURIComponent(keys[index]) + "=" + encodeURIComponent(value));
+      }
+      index = index + 1;
+    }
+    if (pairs.length > 0) {
+      url = url + "?" + pairs.join("&");
+    }
+  } else if (method !== "GET") {
     init.body = JSON.stringify(body);
   }
-  const response = await fetch(ASSET_MANAGER_API_BASE + path, init);
+  const response = await fetch(url, init);
   if (response.ok === false) {
     return null;
   }
