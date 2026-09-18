@@ -1,3 +1,3 @@
-Last completed: Fleet Manager Dashboard
+Last completed: Parts Manager Dashboard
 
 Next: 3D Fleet Visualization

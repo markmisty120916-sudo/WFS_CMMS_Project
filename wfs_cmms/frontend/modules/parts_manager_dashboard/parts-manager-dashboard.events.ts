@@ -1,0 +1,16 @@
+export const PARTS_MANAGER_EVENT_TYPES = Object.freeze({
+  inventory_part_created: "inventory.part.created",
+  inventory_part_updated: "inventory.part.updated",
+  inventory_request_submitted: "inventory.request.submitted",
+  inventory_request_approved: "inventory.request.approved",
+  inventory_request_rejected: "inventory.request.rejected",
+  inventory_fulfillment_completed: "inventory.fulfillment.completed",
+  inventory_usage_logged: "inventory.usage.logged",
+  inventory_reconciliation_completed: "inventory.reconciliation.completed",
+  inventory_vendor_order_created: "inventory.vendor.order.created",
+  workorder_waiting_parts: "workorder.waiting_parts",
+  predictive_generated: "aimi.predictive.generated",
+  predictive_updated: "aimi.predictive.updated",
+  predictive_escalated: "aimi.predictive.escalated",
+  pm_completed: "pm.completed",
+});
