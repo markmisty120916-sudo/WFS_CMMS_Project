@@ -1,0 +1,10 @@
+export { FleetManagerDashboardService } from "./fleet-manager-dashboard.service";
+export type { FleetManagerDashboardServiceOptions } from "./fleet-manager-dashboard.service";
+export { createFleetManagerDashboardModule } from "./fleet-manager-dashboard.module";
+export { createFleetManagerDashboardRouter } from "./fleet-manager-dashboard.routes";
+export { mountFleetManagerDashboardExpress } from "./fleet-manager-dashboard.express";
+export { FLEET_MANAGER_API_BASE, FLEET_MANAGER_API_HEADERS, FLEET_MANAGER_API_ROUTES, fleetManagerApiPath } from "./api/fleet-manager-dashboard.api.contract";
+export { isFleetManagerApiAllowed } from "./api/fleet-manager-dashboard.api.permissions";
+export { canAccessFleetManagerDashboard, canMutateFleetManagerDashboard } from "./fleet-manager-dashboard-rules";
+export { FLEET_MANAGER_EVENT_TYPES } from "./fleet-manager-dashboard-events";
+export { FIND_VEHICLE_LABEL } from "./engines/fleet-find-vehicle.engine";

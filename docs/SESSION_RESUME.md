@@ -1,3 +1,3 @@
-Last completed: Asset Manager
+Last completed: Fleet Manager Dashboard
 
-Next: Fleet Manager Dashboard
+Next: 3D Fleet Visualization
