@@ -1,3 +1,3 @@
-Last completed: Parts Manager Dashboard
+Last completed: Compliance Dashboard
 
 Next: 3D Fleet Visualization
