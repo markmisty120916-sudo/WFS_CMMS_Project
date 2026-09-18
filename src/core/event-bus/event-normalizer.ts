@@ -7,6 +7,24 @@
 import type { EventCategory, EventRole, IncomingEvent, IntegrationEvent } from "./event.interface";
 
 export function categoryForEventType(event_type: string): EventCategory {
+  if (event_type === "asset.created") {
+    return "notification";
+  }
+  if (event_type === "asset.updated") {
+    return "notification";
+  }
+  if (event_type === "asset.deleted") {
+    return "notification";
+  }
+  if (event_type === "bulk_import.completed") {
+    return "notification";
+  }
+  if (event_type === "bulk_import.failed") {
+    return "notification";
+  }
+  if (event_type === "configuration_pack.applied") {
+    return "pm";
+  }
   if (event_type === "aimi.predictive.generated") {
     return "aimi.predictive";
   }

@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assets {
+  asset_id    String  @id
+  tenant_id   String
+  vin         String
+  unit_number String
+  make        String
+  model       String
+  year        String
+  mileage     String
+  hours       String
+  status      String
+  created_at  String
+  updated_at  String
+  deleted_at  String?
+}
+
+model Parts {
+  part_id     String  @id
+  tenant_id   String
+  name        String
+  description String
+  quantity    String
+  location    String
+  created_at  String
+  updated_at  String
+  deleted_at  String?
+}
+
+model Users {
+  user_id    String  @id
+  tenant_id  String
+  name       String
+  email      String
+  role       String
+  status     String
+  created_at String
+  updated_at String
+  deleted_at String?
+}
+
+model PMTemplates {
+  pm_template_id String  @id
+  tenant_id      String
+  name           String
+  interval_miles String
+  interval_hours String
+  created_at     String
+  updated_at     String
+  deleted_at     String?
+}
+
+model PMSchedule {
+  pm_schedule_id String  @id
+  tenant_id      String
+  asset_id       String
+  pm_template_id String
+  due_miles      String
+  due_hours      String
+  status         String
+  created_at     String
+  updated_at     String
+  deleted_at     String?
+}
+
+model IntegrationLogs {
+  log_id     String  @id
+  tenant_id  String
+  event_id   String
+  message    String
+  created_at String
+  updated_at String
+  deleted_at String?
+}

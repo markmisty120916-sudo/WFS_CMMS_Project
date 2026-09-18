@@ -1,0 +1,5 @@
+import { DRIVER_DEFECT_API_ROUTES } from "../../../../src/services/driver-defect/api/driver-defect.api.contract";
+import { isDriverDefectApiAllowed } from "../../../../src/services/driver-defect/api/driver-defect.api.permissions";
+
+export const ASSET_MANAGER_DRIVER_DEFECT_ROUTES = DRIVER_DEFECT_API_ROUTES;
+export { isDriverDefectApiAllowed as isAssetManagerDriverDefectApiAllowed };
