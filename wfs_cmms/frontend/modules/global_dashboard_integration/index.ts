@@ -1,5 +1,6 @@
 export {
   canAccessGlobalDashboardIntegration,
+  canAccessIntegrationDashboard,
   bypassesTenantIsolation,
   integrationTenantAllowed,
 } from "./global-dashboard-integration.rbac";

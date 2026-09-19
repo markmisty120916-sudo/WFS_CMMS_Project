@@ -19,12 +19,12 @@ export function DashboardIntegrationShell(props: {
   return (
     <div>
       {props.children}
-      <IntegrationGuard>
+      <IntegrationGuard dashboard={props.dashboard}>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2" style={gridStyle}>
           {showFindVehicle(props.dashboard) === true ? <FindVehicleMap /> : null}
-          <AimiInsightsPanel />
-          <PartsUsagePredictionsPanel />
-          <CompliancePredictionsPanel />
+          <AimiInsightsPanel dashboard={props.dashboard} />
+          <PartsUsagePredictionsPanel dashboard={props.dashboard} />
+          <CompliancePredictionsPanel dashboard={props.dashboard} />
           {showConfigurationPacks(props.dashboard) === true ? <ConfigurationPackEffectsPanel /> : null}
           {showImportHistory(props.dashboard) === true ? <ImportHistoryReferencePanel /> : null}
         </div>

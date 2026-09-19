@@ -132,7 +132,7 @@ export class GlobalDashboardIntegrationService {
     }
     this.logger.info("global dashboard integration assets");
     const packs = buildPackEffects(dto.tenant_id, this.bypass(dto), await this.load(configurationPacksSelectSql, dto));
-    const imports = buildImportHistory(dto.tenant_id, this.bypass(dto), await this.load(importHistorySelectSql, dto), "assets");
+    const imports = buildImportHistory(dto.tenant_id, this.bypass(dto), await this.load(importHistorySelectSql, dto), "");
     return ok(
       buildAssets(
         dto.tenant_id,

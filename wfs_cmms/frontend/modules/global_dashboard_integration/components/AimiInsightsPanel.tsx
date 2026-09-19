@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { IntegrationAimiItem } from "../global-dashboard-integration.interface";
-import { canAccessIntegrationAimi, integrationTenantAllowed } from "../global-dashboard-integration.rbac";
+import type { IntegrationAimiItem, IntegrationDashboard } from "../global-dashboard-integration.interface";
+import { canAccessIntegrationAimiInsights, integrationTenantAllowed, showAimiInsights } from "../global-dashboard-integration.rbac";
 import { cardStyle, mutedStyle, panelStyle, severityColorStyle, titleStyle } from "../global-dashboard-integration.styles";
 import { integrationWidgetLabel } from "../global-dashboard-integration.widgets";
 import { useGlobalDashboardIntegrationApi } from "../hooks/useGlobalDashboardIntegrationApi";
 
-export function AimiInsightsPanel() {
+export function AimiInsightsPanel(props: { readonly dashboard: IntegrationDashboard }) {
   const api = useGlobalDashboardIntegrationApi();
   const [items, setItems] = useState<readonly IntegrationAimiItem[]>([]);
 
   useEffect(() => {
-    if (api.session === null || canAccessIntegrationAimi(api.session.role) === false) {
+    if (api.session === null || showAimiInsights(props.dashboard, api.session.role) === false) {
       setItems([]);
       return;
     }
@@ -22,10 +22,13 @@ export function AimiInsightsPanel() {
         setItems(payload);
       }
     })();
-  }, [api.request, api.routes.aimi, api.session]);
+  }, [api.request, api.routes.aimi, api.session, props.dashboard]);
 
   const session = api.session;
-  if (api.allowed === false || session === null || canAccessIntegrationAimi(session.role) === false) {
+  if (api.allowed === false || session === null || showAimiInsights(props.dashboard, session.role) === false) {
+    return null;
+  }
+  if (canAccessIntegrationAimiInsights(session.role) === false) {
     return null;
   }
 

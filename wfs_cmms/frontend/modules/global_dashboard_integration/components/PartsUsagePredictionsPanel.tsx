@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { IntegrationInventoryItem } from "../global-dashboard-integration.interface";
-import { canAccessIntegrationInventory, integrationTenantAllowed } from "../global-dashboard-integration.rbac";
+import type { IntegrationDashboard, IntegrationInventoryItem } from "../global-dashboard-integration.interface";
+import { canAccessIntegrationInventory, integrationTenantAllowed, showPartsPredictions } from "../global-dashboard-integration.rbac";
 import { cardStyle, mutedStyle, panelStyle, titleStyle } from "../global-dashboard-integration.styles";
 import { integrationWidgetLabel } from "../global-dashboard-integration.widgets";
 import { useGlobalDashboardIntegrationApi } from "../hooks/useGlobalDashboardIntegrationApi";
 
-export function PartsUsagePredictionsPanel() {
+export function PartsUsagePredictionsPanel(props: { readonly dashboard: IntegrationDashboard }) {
   const api = useGlobalDashboardIntegrationApi();
   const [items, setItems] = useState<readonly IntegrationInventoryItem[]>([]);
 
   useEffect(() => {
-    if (api.session === null || canAccessIntegrationInventory(api.session.role) === false) {
+    if (api.session === null || showPartsPredictions(props.dashboard, api.session.role) === false) {
       setItems([]);
       return;
     }
@@ -22,10 +22,13 @@ export function PartsUsagePredictionsPanel() {
         setItems(payload);
       }
     })();
-  }, [api.request, api.routes.inventory, api.session]);
+  }, [api.request, api.routes.inventory, api.session, props.dashboard]);
 
   const session = api.session;
-  if (api.allowed === false || session === null || canAccessIntegrationInventory(session.role) === false) {
+  if (api.allowed === false || session === null || showPartsPredictions(props.dashboard, session.role) === false) {
+    return null;
+  }
+  if (canAccessIntegrationInventory(session.role) === false) {
     return null;
   }
 

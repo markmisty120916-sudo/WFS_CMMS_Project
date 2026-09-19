@@ -44,5 +44,8 @@ export function severityColorStyle(color: string): CSSProperties {
   if (color === "yellow") {
     return { color: "#facc15", margin: "4px 0", fontWeight: 700 };
   }
+  if (color === "cyan") {
+    return { color: "#22d3ee", margin: "4px 0", fontWeight: 700 };
+  }
   return { color: "#4ade80", margin: "4px 0", fontWeight: 700 };
 }

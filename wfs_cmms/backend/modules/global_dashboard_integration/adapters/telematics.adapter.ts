@@ -23,6 +23,12 @@ export function telematicsChannel(fault_code: string, fault_description: string,
   ) {
     return "obd";
   }
+  if (description.indexOf("GPS") >= 0 || code.indexOf("GPS") >= 0 || description.indexOf("LAT") >= 0 || description.indexOf("LON") >= 0) {
+    return "gps";
+  }
+  if (description.indexOf("BREADCRUMB") >= 0 || code.indexOf("BREAD") >= 0) {
+    return "breadcrumbs";
+  }
   if (is_latest === true) {
     return "gps";
   }

@@ -201,6 +201,12 @@ export function severityColor(severity: string): string {
   if (severity === "S3") {
     return "yellow";
   }
+  if (severity === "S4") {
+    return "green";
+  }
+  if (severity === "S5") {
+    return "cyan";
+  }
   return "green";
 }
 
@@ -208,4 +214,51 @@ export function formatPmInterval(interval_miles: string, interval_hours: string)
   const miles = interval_miles === "" ? "0" : interval_miles;
   const hours = interval_hours === "" ? "0" : interval_hours;
   return miles + " mi / " + hours + " hr";
+}
+
+function canonicalToken(value: string): string {
+  return value.trim().toLowerCase().split(" ").join("_").split("-").join("_");
+}
+
+function tokenInList(value: string, list: readonly string[]): boolean {
+  let index = 0;
+  while (index < list.length) {
+    if (list[index] === value) {
+      return true;
+    }
+    index = index + 1;
+  }
+  return false;
+}
+
+export function normalizeWorkorderState(status: string): string {
+  const value = canonicalToken(status);
+  if (value === "in_progress") {
+    return "started";
+  }
+  if (value === "routed") {
+    return "assigned";
+  }
+  if (value === "scheduled") {
+    return "assigned";
+  }
+  if (tokenInList(value, WORKORDER_STATES()) === true) {
+    return value;
+  }
+  return value;
+}
+
+export function normalizeAssetState(status: string): string {
+  const value = canonicalToken(status);
+  if (value === "oos") {
+    return "out_of_service";
+  }
+  if (tokenInList(value, ASSET_STATES()) === true) {
+    return value;
+  }
+  return value;
+}
+
+export function integrationStatusLabel(status: string): string {
+  return canonicalToken(status).split("_").join(" ").toUpperCase();
 }

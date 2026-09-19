@@ -1,5 +1,5 @@
 import type { DtoRole } from "../../../../src/core/dto/base.dto";
-import { formatPmInterval, severityColor } from "../global-dashboard-integration-rules";
+import { formatPmInterval, normalizeAssetState, normalizeWorkorderState, severityColor } from "../global-dashboard-integration-rules";
 import type {
   ConfigurationPackEffect,
   GlobalDashboardIntegrationFilter,
@@ -183,7 +183,7 @@ export function buildAssets(
           mileage: asField(row, "mileage"),
           hours: asField(row, "hours"),
           status,
-          asset_state: status,
+          asset_state: normalizeAssetState(status),
           health_score: scores.health_score,
           predictive_score: scores.predictive_score,
           pack_effects: packEffectsForTenant(packs, tenant_id),
@@ -254,7 +254,7 @@ export function buildWorkorders(
           scheduled_start: asField(row, "scheduled_start"),
           scheduled_end: asField(row, "scheduled_end"),
           status,
-          workorder_state: status,
+          workorder_state: normalizeWorkorderState(status),
           created_by: asField(row, "created_by"),
         }),
       );

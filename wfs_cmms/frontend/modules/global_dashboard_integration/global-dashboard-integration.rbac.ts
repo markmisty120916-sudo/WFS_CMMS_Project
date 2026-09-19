@@ -115,6 +115,143 @@ export function canAccessIntegrationCompliance(role: DtoRole): boolean {
   return false;
 }
 
+export function canAccessIntegrationAimiInsights(role: DtoRole): boolean {
+  if (role === "MASTER TECHNICIAN") {
+    return true;
+  }
+  if (role === "FLEET MANAGER") {
+    return true;
+  }
+  if (role === "ADMIN") {
+    return true;
+  }
+  if (role === "SILENT MASTER KEY") {
+    return true;
+  }
+  return false;
+}
+
+export function canAccessIntegrationDashboard(dashboard: IntegrationDashboard, role: DtoRole): boolean {
+  if (role === "SILENT MASTER KEY") {
+    return true;
+  }
+  if (dashboard === "technician") {
+    if (role === "TECHNICIAN") {
+      return true;
+    }
+    if (role === "MASTER TECHNICIAN") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "master_technician") {
+    if (role === "MASTER TECHNICIAN") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "fleet_manager") {
+    if (role === "FLEET MANAGER") {
+      return true;
+    }
+    if (role === "MASTER TECHNICIAN") {
+      return true;
+    }
+    if (role === "ADMIN") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "parts_manager") {
+    if (role === "PARTS MANAGER") {
+      return true;
+    }
+    if (role === "FLEET MANAGER") {
+      return true;
+    }
+    if (role === "MASTER TECHNICIAN") {
+      return true;
+    }
+    if (role === "ADMIN") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "compliance") {
+    if (role === "COMPLIANCE OFFICER") {
+      return true;
+    }
+    if (role === "FLEET MANAGER") {
+      return true;
+    }
+    if (role === "MASTER TECHNICIAN") {
+      return true;
+    }
+    if (role === "ADMIN") {
+      return true;
+    }
+    if (role === "DRIVER") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "driver") {
+    if (role === "DRIVER") {
+      return true;
+    }
+    if (role === "FLEET MANAGER") {
+      return true;
+    }
+    return false;
+  }
+  if (dashboard === "silent_master_key") {
+    return false;
+  }
+  return false;
+}
+
+export function showAimiInsights(dashboard: IntegrationDashboard, role: DtoRole): boolean {
+  if (canAccessIntegrationAimiInsights(role) === false) {
+    return false;
+  }
+  if (dashboard === "technician") {
+    return false;
+  }
+  if (dashboard === "parts_manager") {
+    return false;
+  }
+  if (dashboard === "compliance") {
+    return false;
+  }
+  if (dashboard === "driver") {
+    return false;
+  }
+  return true;
+}
+
+export function showPartsPredictions(dashboard: IntegrationDashboard, role: DtoRole): boolean {
+  if (canAccessIntegrationInventory(role) === false) {
+    return false;
+  }
+  if (dashboard === "driver") {
+    return false;
+  }
+  if (dashboard === "compliance") {
+    return false;
+  }
+  return true;
+}
+
+export function showCompliancePredictions(dashboard: IntegrationDashboard, role: DtoRole): boolean {
+  if (canAccessIntegrationCompliance(role) === false) {
+    return false;
+  }
+  if (dashboard === "parts_manager") {
+    return false;
+  }
+  return true;
+}
+
 export function showFindVehicle(_dashboard: IntegrationDashboard): boolean {
   return true;
 }
