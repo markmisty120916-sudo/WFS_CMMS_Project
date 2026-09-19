@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { DashboardIntegrationShell } from "../../../../wfs_cmms/frontend/modules/global_dashboard_integration";
 import { AIMIDiagnosticsPanel } from "./components/AIMIDiagnosticsPanel";
 import { AIMIPredictivePanel } from "./components/AIMIPredictivePanel";
 import { AIMISeverityPanel } from "./components/AIMISeverityPanel";
@@ -15,19 +16,21 @@ import { VoiceCommandButton } from "./components/VoiceCommandButton";
 
 export default function TechnicianPage() {
   return (
-    <div style={gridStyle}>
-      <MyWorkorders />
-      <AssignedTasks />
-      <AIMISeverityPanel />
-      <AIMIDiagnosticsPanel />
-      <AIMIPredictivePanel />
-      <AssetHealthPanel />
-      <PMUpcomingPanel />
-      <PartsNeededPanel />
-      <ComplianceFlagsPanel />
-      <VoiceCommandButton />
-      <MultilingualToggle />
-    </div>
+    <DashboardIntegrationShell dashboard="technician">
+      <div style={gridStyle}>
+        <MyWorkorders />
+        <AssignedTasks />
+        <AIMISeverityPanel />
+        <AIMIDiagnosticsPanel />
+        <AIMIPredictivePanel />
+        <AssetHealthPanel />
+        <PMUpcomingPanel />
+        <PartsNeededPanel />
+        <ComplianceFlagsPanel />
+        <VoiceCommandButton />
+        <MultilingualToggle />
+      </div>
+    </DashboardIntegrationShell>
   );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { DashboardIntegrationShell } from "../../../../wfs_cmms/frontend/modules/global_dashboard_integration";
 import { AIMIDiagnosticsPanel } from "./components/AIMIDiagnosticsPanel";
 import { AIMIPredictivePanel } from "./components/AIMIPredictivePanel";
 import { AIMISeverityPanel } from "./components/AIMISeverityPanel";
@@ -14,18 +15,20 @@ import { WorkorderQueue } from "./components/WorkorderQueue";
 
 export default function MasterTechnicianPage() {
   return (
-    <div style={gridStyle}>
-      <WorkorderQueue />
-      <AIMISeverityPanel />
-      <AIMIDiagnosticsPanel />
-      <AIMIPredictivePanel />
-      <AssetHealthPanel />
-      <PMStatusPanel />
-      <PartsStatusPanel />
-      <ComplianceStatusPanel />
-      <VoiceCommandButton />
-      <MultilingualToggle />
-    </div>
+    <DashboardIntegrationShell dashboard="master_technician">
+      <div style={gridStyle}>
+        <WorkorderQueue />
+        <AIMISeverityPanel />
+        <AIMIDiagnosticsPanel />
+        <AIMIPredictivePanel />
+        <AssetHealthPanel />
+        <PMStatusPanel />
+        <PartsStatusPanel />
+        <ComplianceStatusPanel />
+        <VoiceCommandButton />
+        <MultilingualToggle />
+      </div>
+    </DashboardIntegrationShell>
   );
 }
 
