@@ -9,5 +9,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["index.ts", "module-loader.ts", "runtime-context.ts", "runtime-dependencies.ts", "router-wiring.ts", "modules/**/*.ts"]
+  "include": ["index.ts", "module-loader.ts", "runtime-context.ts", "runtime-dependencies.ts", "router-wiring.ts", "src/core/dto/**/*.ts", "modules/**/*.ts"]
 }
