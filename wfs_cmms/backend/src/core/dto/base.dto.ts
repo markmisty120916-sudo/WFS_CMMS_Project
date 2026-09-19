@@ -8,6 +8,7 @@ export type DtoRole =
   | "asset_manager" | "ASSET_MANAGER"
   | "technician" | "TECHNICIAN"
   | "master_technician" | "MASTER_TECHNICIAN"
+  | "master technician" | "MASTER TECHNICIAN"
   | "viewer" | "VIEWER";
 
 export interface BaseDto {
