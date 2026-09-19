@@ -25,7 +25,9 @@
       "@/event-bus/*": ["src/core/event-bus/*"],
       "@/logger/*": ["src/core/logger/*"],
       "@/types/*": ["src/types/*"],
-      "@/modules/*": ["src/modules/*"]
+      "@/modules/*": ["modules/*"],
+      "@/services/*": ["src/services/*"],
+      "@/config/*": ["src/config/*"]
     }
   },
   "include": [
@@ -35,8 +37,11 @@
     "runtime-dependencies.ts",
     "router-wiring.ts",
     "src/core/**/*.ts",
+    "src/config/**/*.ts",
+    "src/services/**/*.ts",
     "src/types/**/*.ts",
-    "src/types/**/*.d.ts"
+    "src/types/**/*.d.ts",
+    "src/aimi/**/*.ts"
   ],
   "exclude": ["src/wfs_cmms"]
 }

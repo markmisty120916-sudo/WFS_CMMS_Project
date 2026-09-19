@@ -1,0 +1,71 @@
+import type { IncomingMessage, ServerResponse } from "http";
+import type { ContextDto } from "@/dto/context.dto";
+import { GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES } from "./api/global-dashboard-integration.api.contract";
+import { createGlobalDashboardIntegrationController } from "./global-dashboard-integration.controller";
+import type { GlobalDashboardIntegrationService } from "./global-dashboard-integration.service";
+
+function matchPath(pattern: string, pathname: string): boolean {
+  const patternParts = pattern.split("/");
+  const pathParts = pathname.replace("/v1", "").split("/");
+  if (patternParts.length !== pathParts.length) {
+    return false;
+  }
+  let index = 0;
+  while (index < patternParts.length) {
+    if (patternParts[index] !== pathParts[index]) {
+      return false;
+    }
+    index = index + 1;
+  }
+  return true;
+}
+
+function queryFromUrl(url: string): Readonly<Record<string, string>> {
+  const queryIndex = url.indexOf("?");
+  if (queryIndex < 0) {
+    return {};
+  }
+  const query = url.slice(queryIndex + 1);
+  const pairs = query.split("&");
+  const params: Record<string, string> = {};
+  let index = 0;
+  while (index < pairs.length) {
+    const pair = pairs[index];
+    const eq = pair.indexOf("=");
+    if (eq > 0) {
+      params[decodeURIComponent(pair.slice(0, eq))] = decodeURIComponent(pair.slice(eq + 1));
+    }
+    index = index + 1;
+  }
+  return params;
+}
+
+export function createGlobalDashboardIntegrationRouter(service: GlobalDashboardIntegrationService) {
+  const controller = createGlobalDashboardIntegrationController(service);
+  return async function globalDashboardIntegrationRouter(
+    req: IncomingMessage,
+    res: ServerResponse,
+    dto: ContextDto,
+  ): Promise<boolean> {
+    const rawUrl = req.url === undefined ? "" : req.url;
+    const url = rawUrl.split("?")[0];
+    const query = queryFromUrl(rawUrl);
+    const method = req.method === undefined ? "GET" : req.method;
+    let index = 0;
+    while (index < GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES.length) {
+      const route = GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES[index];
+      if (route.method === method && matchPath(route.path, url) === true) {
+        if (dto.tenant_id === "") {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: false, error: "tenant_id mismatch" }));
+          return true;
+        }
+        await controller.handle(req, res, dto, route.operation, query);
+        return true;
+      }
+      index = index + 1;
+    }
+    return false;
+  };
+}

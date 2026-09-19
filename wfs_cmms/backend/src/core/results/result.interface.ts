@@ -1,15 +1,24 @@
-import type { ResultContext } from "@/results/result-context";
+/**
+ * Results Layer — Core
+ * Master Blueprint V2 / AIMI-RULES §2.3
+ * Immutable Ok/Err result. No fallback values. No silent failures.
+ */
 
-export type Result<T> = {
-  ok: boolean;
-  value?: T;
-  context?: ResultContext;
+import type { CoreError } from "../errors/error.interface";
+import type { ResultContext } from "./result-context";
+
+export type OkResult<T> = {
+  readonly ok: true;
+  readonly value: T;
+  readonly error: null;
+  readonly context: ResultContext;
 };
 
-export function ok<T>(value: T, context?: ResultContext): Result<T> {
-  return { ok: true, value, context };
-}
+export type ErrResult = {
+  readonly ok: false;
+  readonly value: null;
+  readonly error: CoreError;
+  readonly context: ResultContext;
+};
 
-export function err<T>(error: unknown, context?: ResultContext): Result<T> {
-  return { ok: false, context };
-}
+export type Result<T> = OkResult<T> | ErrResult;

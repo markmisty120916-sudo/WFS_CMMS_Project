@@ -1,22 +1,29 @@
-export type DtoRole =
-  | "admin" | "ADMIN"
-  | "fleet_manager" | "FLEET_MANAGER"
-  | "fleet manager" | "FLEET MANAGER"
-  | "driver" | "DRIVER"
-  | "parts_manager" | "PARTS_MANAGER"
-  | "parts manager" | "PARTS MANAGER"
-  | "compliance_officer" | "COMPLIANCE_OFFICER"
-  | "compliance officer" | "COMPLIANCE OFFICER"
-  | "silent_master_key" | "SILENT_MASTER_KEY"
-  | "silent master key" | "SILENT MASTER KEY"
-  | "asset_manager" | "ASSET_MANAGER"
-  | "asset manager" | "ASSET MANAGER"
-  | "technician" | "TECHNICIAN"
-  | "master_technician" | "MASTER_TECHNICIAN"
-  | "master technician" | "MASTER TECHNICIAN"
-  | "viewer" | "VIEWER";
+/**
+ * DTO Layer — Core
+ * Master Blueprint V2 / TENANT-ISOLATION §2 / RBAC §2
+ * Immutable base DTO. tenant_id, role, and timestamp are required.
+ */
 
-export interface BaseDto {
-  id?: string;
-  tenant_id?: string;
+export type DtoRole =
+  | "DRIVER"
+  | "TECHNICIAN"
+  | "MASTER TECHNICIAN"
+  | "PARTS MANAGER"
+  | "FLEET MANAGER"
+  | "COMPLIANCE OFFICER"
+  | "ADMIN"
+  | "SILENT MASTER KEY";
+
+export type BaseDto = {
+  readonly tenant_id: string;
+  readonly role: DtoRole;
+  readonly timestamp: string;
+};
+
+export function freezeBaseDto(dto: BaseDto): BaseDto {
+  return Object.freeze({
+    tenant_id: dto.tenant_id,
+    role: dto.role,
+    timestamp: dto.timestamp,
+  });
 }
