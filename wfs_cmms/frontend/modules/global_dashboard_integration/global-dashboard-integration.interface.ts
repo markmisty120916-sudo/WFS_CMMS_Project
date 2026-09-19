@@ -22,6 +22,8 @@ export type GlobalDashboardIntegrationFilter = {
   readonly severity: string;
   readonly status: string;
   readonly vendor_id: string;
+  readonly page: string;
+  readonly limit: string;
 };
 
 export type ConfigurationPackEffect = {

@@ -16,6 +16,8 @@ export { listIntegrationDefects } from "./api/defects.api.client";
 export { listIntegrationVendors } from "./api/vendors.api.client";
 export { listIntegrationTelematics } from "./api/telematics.api.client";
 export { listIntegrationAimi } from "./api/aimi.api.client";
+export { listIntegrationHealth } from "./api/health.api.client";
 export { loadGlobalDashboardIntegrationSession, useGlobalDashboardIntegrationApi } from "./hooks/useGlobalDashboardIntegrationApi";
 export { DashboardIntegrationShell } from "./components/DashboardIntegrationShell";
 export { FindVehicleMap } from "./components/FindVehicleMap";
+export { reportIntegrationError, reportIntegrationTelemetry } from "./global-dashboard-integration.hardening";

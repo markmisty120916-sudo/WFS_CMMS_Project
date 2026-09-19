@@ -55,6 +55,12 @@ export function createGlobalDashboardIntegrationRouter(service: GlobalDashboardI
     while (index < GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES.length) {
       const route = GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES[index];
       if (route.method === method && matchPath(route.path, url) === true) {
+        if (dto.tenant_id === "") {
+          res.statusCode = 400;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: false, error: "tenant_id mismatch" }));
+          return true;
+        }
         await controller.handle(req, res, dto, route.operation, query);
         return true;
       }

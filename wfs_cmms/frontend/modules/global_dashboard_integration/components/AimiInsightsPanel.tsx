@@ -1,26 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { reportIntegrationError } from "../global-dashboard-integration.hardening";
 import type { IntegrationAimiItem, IntegrationDashboard } from "../global-dashboard-integration.interface";
 import { canAccessIntegrationAimiInsights, integrationTenantAllowed, showAimiInsights } from "../global-dashboard-integration.rbac";
 import { cardStyle, mutedStyle, panelStyle, severityColorStyle, titleStyle } from "../global-dashboard-integration.styles";
 import { integrationWidgetLabel } from "../global-dashboard-integration.widgets";
 import { useGlobalDashboardIntegrationApi } from "../hooks/useGlobalDashboardIntegrationApi";
+import { PaginationControls, PanelFallback } from "./PanelFallback";
 
 export function AimiInsightsPanel(props: { readonly dashboard: IntegrationDashboard }) {
-  const api = useGlobalDashboardIntegrationApi();
+  const [page, setPage] = useState(1);
+  const api = useGlobalDashboardIntegrationApi({
+    asset_id: "",
+    workorder_id: "",
+    severity: "",
+    status: "",
+    vendor_id: "",
+    page: String(page),
+    limit: "50",
+  });
   const [items, setItems] = useState<readonly IntegrationAimiItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (api.session === null || showAimiInsights(props.dashboard, api.session.role) === false) {
       setItems([]);
+      setLoading(false);
       return;
     }
+    setLoading(true);
     void (async () => {
       const payload = (await api.request(api.routes.aimi)) as readonly IntegrationAimiItem[] | null;
       if (payload) {
         setItems(payload);
+        setError(false);
+      } else {
+        setError(true);
+        reportIntegrationError(props.dashboard, "aimi");
       }
+      setLoading(false);
     })();
   }, [api.request, api.routes.aimi, api.session, props.dashboard]);
 
@@ -30,6 +50,15 @@ export function AimiInsightsPanel(props: { readonly dashboard: IntegrationDashbo
   }
   if (canAccessIntegrationAimiInsights(session.role) === false) {
     return null;
+  }
+  if (loading === true) {
+    return <PanelFallback title={integrationWidgetLabel("aimi")} state="loading" />;
+  }
+  if (error === true) {
+    return <PanelFallback title={integrationWidgetLabel("aimi")} state="error" />;
+  }
+  if (items.length === 0) {
+    return <PanelFallback title={integrationWidgetLabel("aimi")} state="empty" />;
   }
 
   return (
@@ -49,6 +78,7 @@ export function AimiInsightsPanel(props: { readonly dashboard: IntegrationDashbo
           </article>
         ) : null,
       )}
+      <PaginationControls page={page} hasMore={items.length >= 50} onPage={setPage} />
     </section>
   );
 }

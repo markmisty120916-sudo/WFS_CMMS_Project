@@ -18,5 +18,11 @@ export {
   severityColor,
   formatPmInterval,
 } from "./global-dashboard-integration-rules";
+export {
+  validateIntegrationQuery,
+  integrationHealthStatus,
+  isIntegrationMaintenanceMode,
+  setIntegrationMaintenanceMode,
+} from "./global-dashboard-integration.hardening";
 export { GLOBAL_DASHBOARD_INTEGRATION_EVENT_TYPES } from "./global-dashboard-integration-events";
 export { FIND_VEHICLE_LABEL } from "./adapters/telematics.adapter";

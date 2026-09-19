@@ -1,22 +1,30 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import type { ContextDto } from "../../../../src/core/dto/context.dto";
-import type { GlobalDashboardIntegrationFilter } from "./global-dashboard-integration.interface";
+import type { GlobalDashboardIntegrationApiOperation } from "./api/global-dashboard-integration.api.contract";
+import { isGlobalDashboardIntegrationApiAllowed } from "./api/global-dashboard-integration.api.permissions";
+import {
+  cacheGet,
+  cacheKey,
+  cacheSet,
+  circuitAllows,
+  circuitFailure,
+  circuitSuccess,
+  integrationFilterFromQuery,
+  integrationHealthStatus,
+  isIntegrationMaintenanceMode,
+  paginateIntegrationList,
+  rateLimitAllows,
+  sanitizeIntegrationValue,
+  structuredIntegrationLog,
+  validateIntegrationQuery,
+} from "./global-dashboard-integration.hardening";
+import type { IntegrationTelematicsResult } from "./global-dashboard-integration.interface";
 import type { GlobalDashboardIntegrationService } from "./global-dashboard-integration.service";
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json");
-  res.end(JSON.stringify(body));
-}
-
-function filterFromQuery(query: Readonly<Record<string, string>>): GlobalDashboardIntegrationFilter {
-  return Object.freeze({
-    asset_id: query.asset_id || query.asset || "",
-    workorder_id: query.workorder_id || "",
-    severity: query.severity || "",
-    status: query.status || "",
-    vendor_id: query.vendor_id || query.vendor || "",
-  });
+  res.end(JSON.stringify(sanitizeIntegrationValue(body)));
 }
 
 export function createGlobalDashboardIntegrationController(service: GlobalDashboardIntegrationService) {
@@ -28,58 +36,110 @@ export function createGlobalDashboardIntegrationController(service: GlobalDashbo
       operation: string,
       query: Readonly<Record<string, string>>,
     ): Promise<void> {
-      const filter = filterFromQuery(query);
-      if (operation === "assets") {
-        const result = await service.assets(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      if (validateIntegrationQuery(query) === false) {
+        send(res, 400, { ok: false, error: "dto invalid" });
         return;
       }
-      if (operation === "workorders") {
-        const result = await service.workorders(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      const typed = operation as GlobalDashboardIntegrationApiOperation;
+      if (isGlobalDashboardIntegrationApiAllowed(typed, dto.role) === false) {
+        send(res, 400, { ok: false, error: "role unauthorized" });
         return;
       }
-      if (operation === "pm") {
-        const result = await service.pm(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      if (rateLimitAllows(dto.tenant_id, typed) === false) {
+        send(res, 429, { ok: false, error: "dto invalid" });
         return;
       }
-      if (operation === "inventory") {
-        const result = await service.inventory(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      if (circuitAllows(typed) === false) {
+        send(res, 503, { ok: false, error: "dto invalid" });
         return;
       }
-      if (operation === "compliance") {
-        const result = await service.compliance(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      const filter = integrationFilterFromQuery(query);
+      const key = cacheKey(dto.tenant_id, typed, filter);
+      if (typed !== "health") {
+        const cached = cacheGet(key);
+        if (cached !== null) {
+          send(res, 200, cached);
+          return;
+        }
+      }
+      if (typed === "health") {
+        const health = {
+          ok: true,
+          value: integrationHealthStatus(),
+        };
+        send(res, 200, health);
         return;
       }
-      if (operation === "dvir") {
-        const result = await service.dvir(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
+      let result: { ok: boolean; value?: unknown } = { ok: false };
+      try {
+        if (typed === "assets") {
+          result = await service.assets(dto, filter);
+        }
+        if (typed === "workorders") {
+          result = await service.workorders(dto, filter);
+        }
+        if (typed === "pm") {
+          result = await service.pm(dto, filter);
+        }
+        if (typed === "inventory") {
+          result = await service.inventory(dto, filter);
+        }
+        if (typed === "compliance") {
+          result = await service.compliance(dto, filter);
+        }
+        if (typed === "dvir") {
+          result = await service.dvir(dto, filter);
+        }
+        if (typed === "defects") {
+          result = await service.defects(dto, filter);
+        }
+        if (typed === "vendors") {
+          result = await service.vendors(dto, filter);
+        }
+        if (typed === "telematics") {
+          result = await service.telematics(dto, filter);
+        }
+        if (typed === "aimi") {
+          result = await service.aimi(dto, filter);
+        }
+      } catch {
+        if (typed === "aimi" || typed === "telematics" || typed === "compliance") {
+          circuitFailure(typed);
+        }
+        send(res, 400, { ok: false, error: "dto invalid" });
         return;
       }
-      if (operation === "defects") {
-        const result = await service.defects(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
-        return;
+      if (result.ok === true && Array.isArray(result.value) === true) {
+        result = {
+          ok: true,
+          value: paginateIntegrationList(result.value as readonly unknown[], filter.page, filter.limit),
+        };
       }
-      if (operation === "vendors") {
-        const result = await service.vendors(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
-        return;
+      if (result.ok === true && typed === "telematics" && result.value !== undefined) {
+        const telematics = result.value as IntegrationTelematicsResult;
+        result = {
+          ok: true,
+          value: Object.freeze({
+            tenant_id: telematics.tenant_id,
+            label: telematics.label,
+            points: paginateIntegrationList(telematics.points, filter.page, filter.limit),
+          }),
+        };
       }
-      if (operation === "telematics") {
-        const result = await service.telematics(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
-        return;
+      if (result.ok === true) {
+        circuitSuccess(typed);
+        cacheSet(key, result);
       }
-      if (operation === "aimi") {
-        const result = await service.aimi(dto, filter);
-        send(res, result.ok === true ? 200 : 400, result);
-        return;
+      if (result.ok === false && (typed === "aimi" || typed === "telematics" || typed === "compliance")) {
+        circuitFailure(typed);
       }
-      send(res, 404, { ok: false });
+      if (typeof console !== "undefined" && typeof console.info === "function") {
+        console.info(structuredIntegrationLog(typed, dto.tenant_id, dto.user_id, String(dto.role), result.ok === true ? "ok" : "error"));
+      }
+      send(res, result.ok === true ? 200 : 400, {
+        ...result,
+        maintenance: isIntegrationMaintenanceMode() === true ? "on" : "off",
+      });
     },
   };
 }

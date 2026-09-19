@@ -20,6 +20,27 @@ export function integrationWidgetLabel(widget: string): string {
   if (widget === "compliance_predictions") {
     return "Compliance Predictions";
   }
+  if (widget === "loading") {
+    return "Loading";
+  }
+  if (widget === "empty") {
+    return "No records";
+  }
+  if (widget === "error") {
+    return "Unavailable";
+  }
+  if (widget === "previous") {
+    return "Previous";
+  }
+  if (widget === "next") {
+    return "Next";
+  }
+  if (widget === "maintenance") {
+    return "Maintenance";
+  }
+  if (widget === "maintenance_body") {
+    return "System is in maintenance mode";
+  }
   return widget;
 }
 

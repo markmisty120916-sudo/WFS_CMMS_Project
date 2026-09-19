@@ -46,5 +46,8 @@ export function isGlobalDashboardIntegrationApiAllowed(
   if (operation === "aimi") {
     return canAccessIntegrationAimi(role);
   }
+  if (operation === "health") {
+    return true;
+  }
   return false;
 }

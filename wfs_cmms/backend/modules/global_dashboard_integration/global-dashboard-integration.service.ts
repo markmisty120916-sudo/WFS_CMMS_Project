@@ -152,6 +152,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration workorders");
     const packs = buildPackEffects(dto.tenant_id, this.bypass(dto), await this.load(configurationPacksSelectSql, dto));
     return ok(
       buildWorkorders(dto.tenant_id, this.bypass(dto), dto.role, dto.user_id, await this.load(workordersSelectSql, dto), packs, filter),
@@ -164,6 +165,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration pm");
     const packs = buildPackEffects(dto.tenant_id, this.bypass(dto), await this.load(configurationPacksSelectSql, dto));
     return ok(
       buildPm(
@@ -183,6 +185,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration inventory");
     return ok(
       buildInventory(
         dto.tenant_id,
@@ -201,6 +204,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration compliance");
     return ok(buildCompliance(dto.tenant_id, this.bypass(dto), await this.load(inspectionsSelectSql, dto), filter), resultContextFromDto(dto));
   }
 
@@ -209,6 +213,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration dvir");
     return ok(buildDvir(dto.tenant_id, this.bypass(dto), await this.load(violationsSelectSql, dto), filter), resultContextFromDto(dto));
   }
 
@@ -217,6 +222,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration defects");
     return ok(buildDefects(dto.tenant_id, this.bypass(dto), await this.load(violationsSelectSql, dto), filter), resultContextFromDto(dto));
   }
 
@@ -225,6 +231,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration vendors");
     return ok(buildVendors(dto.tenant_id, this.bypass(dto), await this.load(vendorsSelectSql, dto), filter), resultContextFromDto(dto));
   }
 
@@ -233,6 +240,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration telematics");
     const packs = buildPackEffects(dto.tenant_id, this.bypass(dto), await this.load(configurationPacksSelectSql, dto));
     return ok(
       buildTelematics(dto.tenant_id, this.bypass(dto), await this.load(assetsSelectSql, dto), await this.load(telematicsSelectSql, dto), packs, filter),
@@ -245,6 +253,7 @@ export class GlobalDashboardIntegrationService {
     if (blocked !== null) {
       return blocked;
     }
+    this.logger.info("global dashboard integration aimi");
     return ok(
       buildAimi(
         dto.tenant_id,

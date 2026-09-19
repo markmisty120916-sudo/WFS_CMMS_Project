@@ -6,6 +6,7 @@ import {
   GLOBAL_DASHBOARD_INTEGRATION_CLIENT_ROUTES,
   globalDashboardIntegrationRequest,
 } from "../api/global-dashboard-integration.api.client";
+import { INTEGRATION_REFRESH_MS, reportIntegrationError } from "../global-dashboard-integration.hardening";
 import type {
   GlobalDashboardIntegrationFilter,
   GlobalDashboardIntegrationSession,
@@ -61,10 +62,13 @@ const emptyFilter: GlobalDashboardIntegrationFilter = {
   severity: "",
   status: "",
   vendor_id: "",
+  page: "1",
+  limit: "50",
 };
 
 export function useGlobalDashboardIntegrationApi(filter: GlobalDashboardIntegrationFilter = emptyFilter) {
   const [session, setSession] = useState<GlobalDashboardIntegrationSession | null>(null);
+  const [tick, setTick] = useState(0);
   const allowed = session !== null && canAccessGlobalDashboardIntegration(session.role) && session.tenant_id !== "";
 
   const request = useCallback(
@@ -76,22 +80,38 @@ export function useGlobalDashboardIntegrationApi(filter: GlobalDashboardIntegrat
       if (canAccessGlobalDashboardIntegration(current.role) === false) {
         return null;
       }
-      return resultValue(
-        await globalDashboardIntegrationRequest(current, path, {
-          asset_id: filter.asset_id,
-          workorder_id: filter.workorder_id,
-          severity: filter.severity,
-          status: filter.status,
-          vendor_id: filter.vendor_id,
-        }),
-      );
+      try {
+        return resultValue(
+          await globalDashboardIntegrationRequest(current, path, {
+            asset_id: filter.asset_id,
+            workorder_id: filter.workorder_id,
+            severity: filter.severity,
+            status: filter.status,
+            vendor_id: filter.vendor_id,
+            page: filter.page,
+            limit: filter.limit,
+          }),
+        );
+      } catch {
+        reportIntegrationError("integration", path);
+        return null;
+      }
     },
-    [filter.asset_id, filter.severity, filter.status, filter.vendor_id, filter.workorder_id],
+    [filter.asset_id, filter.limit, filter.page, filter.severity, filter.status, filter.vendor_id, filter.workorder_id, tick],
   );
 
   useEffect(() => {
     setSession(loadGlobalDashboardIntegrationSession());
   }, []);
 
-  return { session, allowed, request, routes: GLOBAL_DASHBOARD_INTEGRATION_CLIENT_ROUTES };
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTick((value) => value + 1);
+    }, INTEGRATION_REFRESH_MS);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  return { session, allowed, request, routes: GLOBAL_DASHBOARD_INTEGRATION_CLIENT_ROUTES, page: filter.page, limit: filter.limit };
 }

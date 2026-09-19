@@ -18,7 +18,8 @@ export type GlobalDashboardIntegrationApiOperation =
   | "defects"
   | "vendors"
   | "telematics"
-  | "aimi";
+  | "aimi"
+  | "health";
 
 export type GlobalDashboardIntegrationApiRoute = {
   readonly method: GlobalDashboardIntegrationApiMethod;
@@ -37,6 +38,7 @@ export const GLOBAL_DASHBOARD_INTEGRATION_API_ROUTES: readonly GlobalDashboardIn
   Object.freeze({ method: "GET" as const, path: "/integration/vendors", operation: "vendors" as const }),
   Object.freeze({ method: "GET" as const, path: "/integration/telematics", operation: "telematics" as const }),
   Object.freeze({ method: "GET" as const, path: "/integration/aimi", operation: "aimi" as const }),
+  Object.freeze({ method: "GET" as const, path: "/integration/health", operation: "health" as const }),
 ]);
 
 export function globalDashboardIntegrationApiPath(path: string): string {

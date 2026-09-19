@@ -1,3 +1,3 @@
-Last completed: System Stabilization Phase
+Last completed: Production Hardening Phase
 
-Next: Production Hardening Phase
+Next: Await next authorized phase
