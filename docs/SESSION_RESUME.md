@@ -1,3 +1,3 @@
-Last completed: Production Hardening Phase
+Last completed: Final Release Preparation Phase
 
-Next: Final Release Preparation Phase
+Next: Await next authorized phase

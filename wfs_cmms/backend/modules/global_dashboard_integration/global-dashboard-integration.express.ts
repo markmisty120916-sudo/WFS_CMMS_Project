@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import type { ContextDto } from "../../../../src/core/dto/context.dto";
 import { createGlobalDashboardIntegrationRouter } from "./global-dashboard-integration.routes";
+import { createGlobalDashboardIntegrationReleasePrepRouter } from "./global-dashboard-integration.release-prep.routes";
 import type { GlobalDashboardIntegrationService } from "./global-dashboard-integration.service";
 
 export type GlobalDashboardIntegrationExpressApp = {
@@ -16,9 +17,15 @@ export function mountGlobalDashboardIntegrationExpress(
   toDto: (req: IncomingMessage) => ContextDto,
 ): void {
   const router = createGlobalDashboardIntegrationRouter(service);
+  const releasePrep = createGlobalDashboardIntegrationReleasePrepRouter();
   app.use("/v1", (req, res, next) => {
     void (async () => {
-      const handled = await router(req, res, toDto(req));
+      const dto = toDto(req);
+      const prepHandled = await releasePrep(req, res, dto);
+      if (prepHandled === true) {
+        return;
+      }
+      const handled = await router(req, res, dto);
       if (handled === false) {
         next();
       }

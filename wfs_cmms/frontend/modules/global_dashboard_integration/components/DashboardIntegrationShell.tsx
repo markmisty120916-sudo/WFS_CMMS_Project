@@ -16,6 +16,7 @@ import { IntegrationGuard } from "./IntegrationGuard";
 import { LazyIntegrationPanel } from "./LazyIntegrationPanel";
 import { MaintenanceModeBanner } from "./MaintenanceModeBanner";
 import { PartsUsagePredictionsPanel } from "./PartsUsagePredictionsPanel";
+import { ReleasePreflightBanner } from "./ReleasePreflightBanner";
 
 export function DashboardIntegrationShell(props: {
   readonly dashboard: IntegrationDashboard;
@@ -28,6 +29,7 @@ export function DashboardIntegrationShell(props: {
   return (
     <div>
       <MaintenanceModeBanner />
+      <ReleasePreflightBanner />
       {props.children}
       <IntegrationGuard dashboard={props.dashboard}>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2" style={gridStyle}>
