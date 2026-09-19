@@ -1,6 +1,7 @@
 export type DtoRole =
   | "admin" | "ADMIN"
   | "fleet_manager" | "FLEET_MANAGER"
+  | "fleet manager" | "FLEET MANAGER"
   | "driver" | "DRIVER"
   | "parts_manager" | "PARTS_MANAGER"
   | "parts manager" | "PARTS MANAGER"
