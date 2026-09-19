@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { join } from "path";
 import { discoverBackendModules } from "./module-loader";
+import { wireLockedModuleRouters } from "./router-wiring";
 
 const PORT = 3001;
 
@@ -33,11 +34,13 @@ while (index < discovered.length) {
         item.expressFiles.join(",") +
         " routes=" +
         item.routeFiles.join(",") +
-        " mount=none",
+        " mount=existing_express",
     ),
   );
   index = index + 1;
 }
+
+wireLockedModuleRouters(app);
 
 app.listen(PORT, () => {
   console.info(structuredRuntimeLog("listen", String(PORT)));
