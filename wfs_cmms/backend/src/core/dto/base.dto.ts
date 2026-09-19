@@ -3,6 +3,7 @@ export type DtoRole =
   | "fleet_manager" | "FLEET_MANAGER"
   | "driver" | "DRIVER"
   | "parts_manager" | "PARTS_MANAGER"
+  | "parts manager" | "PARTS MANAGER"
   | "compliance_officer" | "COMPLIANCE_OFFICER"
   | "silent_master_key" | "SILENT_MASTER_KEY"
   | "asset_manager" | "ASSET_MANAGER"
