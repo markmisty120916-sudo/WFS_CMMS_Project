@@ -1,1 +1,1 @@
-export type { DtoRole, BaseDto } from "./base.dto";
+export type { DtoRole, BaseDto } from "@/dto/base.dto";

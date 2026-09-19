@@ -1,1 +1,1 @@
-export { NotAuthorizedError, InvalidTenantError, MissingContextError } from "../../../../core/errors/runtime-errors";
+export { NotAuthorizedError, InvalidTenantError, MissingContextError } from "@/errors/runtime-errors";

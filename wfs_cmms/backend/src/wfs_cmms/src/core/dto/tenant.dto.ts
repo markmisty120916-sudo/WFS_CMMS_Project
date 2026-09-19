@@ -1,1 +1,1 @@
-export type { TenantDto } from "../../../../core/dto/tenant.dto";
+export type { TenantDto } from "@/dto/tenant.dto";

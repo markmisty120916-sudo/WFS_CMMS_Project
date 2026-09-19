@@ -1,18 +1,18 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { AssetManagerService } from "./modules/asset_manager/asset-manager.service";
-import { mountAssetManagerExpress } from "./modules/asset_manager/asset-manager.express";
-import { ComplianceDashboardService } from "./modules/compliance_dashboard/compliance-dashboard.service";
-import { mountComplianceDashboardExpress } from "./modules/compliance_dashboard/compliance-dashboard.express";
-import { DriverPortalService } from "./modules/driver_portal/driver-portal.service";
-import { mountDriverPortalExpress } from "./modules/driver_portal/driver-portal.express";
-import { FleetManagerDashboardService } from "./modules/fleet_manager_dashboard/fleet-manager-dashboard.service";
-import { mountFleetManagerDashboardExpress } from "./modules/fleet_manager_dashboard/fleet-manager-dashboard.express";
-import { GlobalDashboardIntegrationService } from "./modules/global_dashboard_integration/global-dashboard-integration.service";
-import { mountGlobalDashboardIntegrationExpress } from "./modules/global_dashboard_integration/global-dashboard-integration.express";
-import { PartsManagerDashboardService } from "./modules/parts_manager_dashboard/parts-manager-dashboard.service";
-import { mountPartsManagerDashboardExpress } from "./modules/parts_manager_dashboard/parts-manager-dashboard.express";
-import { SilentMasterKeyDashboardService } from "./modules/silent_master_key_dashboard/silent-master-key-dashboard.service";
-import { mountSilentMasterKeyDashboardExpress } from "./modules/silent_master_key_dashboard/silent-master-key-dashboard.express";
+import { AssetManagerService } from "@/modules/asset_manager/asset-manager.service";
+import { mountAssetManagerExpress } from "@/modules/asset_manager/asset-manager.express";
+import { ComplianceDashboardService } from "@/modules/compliance_dashboard/compliance-dashboard.service";
+import { mountComplianceDashboardExpress } from "@/modules/compliance_dashboard/compliance-dashboard.express";
+import { DriverPortalService } from "@/modules/driver_portal/driver-portal.service";
+import { mountDriverPortalExpress } from "@/modules/driver_portal/driver-portal.express";
+import { FleetManagerDashboardService } from "@/modules/fleet_manager_dashboard/fleet-manager-dashboard.service";
+import { mountFleetManagerDashboardExpress } from "@/modules/fleet_manager_dashboard/fleet-manager-dashboard.express";
+import { GlobalDashboardIntegrationService } from "@/modules/global_dashboard_integration/global-dashboard-integration.service";
+import { mountGlobalDashboardIntegrationExpress } from "@/modules/global_dashboard_integration/global-dashboard-integration.express";
+import { PartsManagerDashboardService } from "@/modules/parts_manager_dashboard/parts-manager-dashboard.service";
+import { mountPartsManagerDashboardExpress } from "@/modules/parts_manager_dashboard/parts-manager-dashboard.express";
+import { SilentMasterKeyDashboardService } from "@/modules/silent_master_key_dashboard/silent-master-key-dashboard.service";
+import { mountSilentMasterKeyDashboardExpress } from "@/modules/silent_master_key_dashboard/silent-master-key-dashboard.express";
 import { requestToContextDto } from "./runtime-context";
 import {
   createRuntimeAuditLogHook,

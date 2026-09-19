@@ -1,1 +1,1 @@
-export type { WorkorderDto } from "../../../../core/dto/workorder.dto";
+export type { WorkorderDto } from "@/dto/workorder.dto";

@@ -1,2 +1,2 @@
-export type { ContextDto } from "../../../../core/dto/context.dto";
-export { freezeContextDto } from "../../../../core/dto/context.dto";
+export type { ContextDto } from "@/dto/context.dto";
+export { freezeContextDto } from "@/dto/context.dto";

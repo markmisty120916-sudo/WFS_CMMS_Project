@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "http";
-import { freezeContextDto, type ContextDto } from "../../src/core/dto/context.dto";
-import type { DtoRole } from "../../src/core/dto/base.dto";
+import { freezeContextDto, type ContextDto } from "@/dto/context.dto";
+import type { DtoRole } from "@/dto/base.dto";
 
 function headerValue(req: IncomingMessage, name: string): string {
   const value = req.headers[name];

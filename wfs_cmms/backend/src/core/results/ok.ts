@@ -1,1 +1,1 @@
-export { ok } from "./result.interface";
+export { ok } from "@/results/result.interface";

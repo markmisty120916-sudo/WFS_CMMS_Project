@@ -1,1 +1,1 @@
-export type { DefectDto } from "../../../../core/dto/defect.dto";
+export type { DefectDto } from "@/dto/defect.dto";

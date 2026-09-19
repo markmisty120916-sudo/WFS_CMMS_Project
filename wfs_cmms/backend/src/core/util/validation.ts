@@ -1,1 +1,1 @@
-export { isNonEmpty } from "../util";
+export { isNonEmpty } from "@/util";

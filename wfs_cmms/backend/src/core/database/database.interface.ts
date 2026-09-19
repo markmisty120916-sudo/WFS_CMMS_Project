@@ -1,4 +1,4 @@
-import type { PreparedStatement } from "./prepared-statement";
+import type { PreparedStatement } from "@/database/prepared-statement";
 
 export type DatabaseQueryResult = {
   rows: readonly Readonly<Record<string, unknown>>[];

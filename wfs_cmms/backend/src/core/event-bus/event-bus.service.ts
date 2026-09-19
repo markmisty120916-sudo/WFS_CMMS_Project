@@ -4,6 +4,8 @@ export type IncomingEvent = {
 };
 
 export class EventBusService {
+  constructor(_deps?: unknown) {}
+
   async publish(_incoming: IncomingEvent): Promise<IncomingEvent> {
     return _incoming;
   }

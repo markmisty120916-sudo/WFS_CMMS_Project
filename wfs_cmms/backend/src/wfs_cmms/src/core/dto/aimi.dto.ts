@@ -1,1 +1,1 @@
-export type { AimiInsightDto, AimiPredictionDto } from "../../../../core/dto/aimi.dto";
+export type { AimiInsightDto, AimiPredictionDto } from "@/dto/aimi.dto";

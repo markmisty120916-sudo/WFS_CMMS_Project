@@ -7,7 +7,36 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/core/*": ["src/core/*"],
+      "@/dto": ["src/core/dto/index.ts"],
+      "@/dto/*": ["src/core/dto/*"],
+      "@/rbac": ["src/core/rbac/index.ts"],
+      "@/rbac/*": ["src/core/rbac/*"],
+      "@/errors": ["src/core/errors/index.ts"],
+      "@/errors/*": ["src/core/errors/*"],
+      "@/results/*": ["src/core/results/*"],
+      "@/util": ["src/core/util.ts"],
+      "@/util/*": ["src/core/util/*"],
+      "@/validation/*": ["src/core/validation/*"],
+      "@/database/*": ["src/core/database/*"],
+      "@/event-bus/*": ["src/core/event-bus/*"],
+      "@/logger/*": ["src/core/logger/*"],
+      "@/types/*": ["src/types/*"],
+      "@/modules/*": ["src/modules/*"]
+    }
   },
-  "include": ["index.ts", "module-loader.ts", "runtime-context.ts", "runtime-dependencies.ts", "router-wiring.ts", "src/core/dto/**/*.ts", "modules/**/*.ts"]
+  "include": [
+    "index.ts",
+    "module-loader.ts",
+    "runtime-context.ts",
+    "runtime-dependencies.ts",
+    "router-wiring.ts",
+    "src/core/**/*.ts",
+    "src/types/**/*.ts",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": ["src/wfs_cmms"]
 }

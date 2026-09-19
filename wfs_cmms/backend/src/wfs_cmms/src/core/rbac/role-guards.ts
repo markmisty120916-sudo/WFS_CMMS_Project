@@ -9,4 +9,4 @@ export {
   isAdmin,
   isSilentMasterKey,
   isViewer,
-} from "../../../../core/rbac/role-guards";
+} from "@/rbac/role-guards";

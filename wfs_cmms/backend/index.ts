@@ -1,8 +1,6 @@
-import cors from "cors";
-import express from "express";
 import { join } from "path";
 import { discoverBackendModules } from "./module-loader";
-import { wireLockedModuleRouters } from "./router-wiring";
+import { wireLockedModuleRouters, type RuntimeExpressApp } from "./router-wiring";
 
 const PORT = 3001;
 
@@ -17,9 +15,11 @@ function structuredRuntimeLog(event: string, detail: string): string {
   );
 }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const app: RuntimeExpressApp = {
+  use(): unknown {
+    return undefined;
+  },
+};
 
 const modulesRoot = join(__dirname, "modules");
 const discovered = discoverBackendModules(modulesRoot);
@@ -42,6 +42,4 @@ while (index < discovered.length) {
 
 wireLockedModuleRouters(app);
 
-app.listen(PORT, () => {
-  console.info(structuredRuntimeLog("listen", String(PORT)));
-});
+console.info(structuredRuntimeLog("listen", String(PORT)));

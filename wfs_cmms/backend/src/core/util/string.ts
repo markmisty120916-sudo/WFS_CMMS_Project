@@ -1,1 +1,1 @@
-export { asNonEmptyString } from "../util";
+export { asNonEmptyString } from "@/util";

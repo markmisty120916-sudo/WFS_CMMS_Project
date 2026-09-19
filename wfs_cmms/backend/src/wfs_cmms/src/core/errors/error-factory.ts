@@ -1,1 +1,1 @@
-export { createError } from "../../../../core/errors/error-factory";
+export { createError } from "@/errors/error-factory";

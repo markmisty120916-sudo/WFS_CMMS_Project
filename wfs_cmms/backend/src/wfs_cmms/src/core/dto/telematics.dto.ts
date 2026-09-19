@@ -1,1 +1,1 @@
-export type { TelematicsEventDto, GpsLocationDto } from "../../../../core/dto/telematics.dto";
+export type { TelematicsEventDto, GpsLocationDto } from "@/dto/telematics.dto";

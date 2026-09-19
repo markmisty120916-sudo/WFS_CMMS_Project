@@ -1,1 +1,1 @@
-export { err } from "./result.interface";
+export { err } from "@/results/result.interface";

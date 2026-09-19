@@ -1,1 +1,1 @@
-export type { ErrorType } from "../../../../core/errors/error-types";
+export type { ErrorType } from "@/errors/error-types";

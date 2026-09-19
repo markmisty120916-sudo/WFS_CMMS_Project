@@ -1,1 +1,1 @@
-export { parseDtoRole } from "../../../../core/validation/role.schema";
+export { parseDtoRole } from "@/validation/role.schema";

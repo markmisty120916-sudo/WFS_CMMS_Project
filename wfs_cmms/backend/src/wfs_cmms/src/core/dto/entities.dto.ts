@@ -1,1 +1,1 @@
-export type { AssetDto, WorkorderDto, InspectionDto, DefectDto } from "../../../../core/dto/entities.dto";
+export type { AssetDto, WorkorderDto, InspectionDto, DefectDto } from "@/dto/entities.dto";

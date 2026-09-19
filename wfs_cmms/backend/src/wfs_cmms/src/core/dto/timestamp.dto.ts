@@ -1,1 +1,1 @@
-export type { TimestampDto } from "../../../../core/dto/timestamp.dto";
+export type { TimestampDto } from "@/dto/timestamp.dto";

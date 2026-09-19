@@ -1,6 +1,6 @@
-import type { Database } from "../../src/core/database/database.interface";
-import { EventBusService } from "../../src/core/event-bus/event-bus.service";
-import type { AuditLogHook, Logger } from "../../src/core/logger/logger.interface";
+import type { Database } from "@/database/database.interface";
+import { EventBusService } from "@/event-bus/event-bus.service";
+import type { AuditLogHook, Logger } from "@/logger/logger.interface";
 
 export function createRuntimeLogger(): Logger {
   const write = (level: string, message: string): void => {

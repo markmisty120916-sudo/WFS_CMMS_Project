@@ -1,1 +1,1 @@
-export type { RoleDto } from "../../../../core/dto/role.dto";
+export type { RoleDto } from "@/dto/role.dto";

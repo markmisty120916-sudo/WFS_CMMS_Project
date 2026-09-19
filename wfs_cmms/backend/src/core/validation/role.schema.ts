@@ -1,4 +1,4 @@
-import type { DtoRole } from "../dto/base.dto";
+import type { DtoRole } from "@/dto/base.dto";
 
 export function parseDtoRole(value: unknown): DtoRole | null {
   if (typeof value !== "string") {

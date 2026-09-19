@@ -1,4 +1,4 @@
-import type { ResultContext } from "./result-context";
+import type { ResultContext } from "@/results/result-context";
 
 export type Result<T> = {
   ok: boolean;

@@ -1,4 +1,4 @@
-import type { BaseDto, DtoRole } from "./base.dto";
+import type { BaseDto, DtoRole } from "@/dto/base.dto";
 
 export type ContextDto = BaseDto & {
   user_id?: string;
